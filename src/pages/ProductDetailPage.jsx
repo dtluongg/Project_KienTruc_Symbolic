@@ -184,8 +184,8 @@ const ProductDetailPage = () => {
                       key={color}
                       className={`btn ${
                         selectedVariant?.color === color
-                          ? 'btn-primary'
-                          : 'btn-outline-primary'
+                          ? 'btn-dark'
+                          : 'btn-outline-dark'
                       }`}
                       onClick={() => setSelectedVariant(variantWithColor)}
                     >
@@ -209,8 +209,8 @@ const ProductDetailPage = () => {
                       key={variant.variant_id}
                       className={`btn ${
                         selectedVariant?.variant_id === variant.variant_id
-                          ? 'btn-primary'
-                          : 'btn-outline-primary'
+                          ? 'btn-dark'
+                          : 'btn-outline-dark'
                       }`}
                       onClick={() => setSelectedVariant(variant)}
                     >
@@ -246,7 +246,7 @@ const ProductDetailPage = () => {
           </div>
 
           <button
-            className="btn btn-primary btn-lg w-100 mb-3"
+            className="btn btn-dark btn-lg w-100 mb-3"
             onClick={handleAddToCart}
             disabled={!selectedVariant || selectedVariant.stock_quantity === 0}
           >

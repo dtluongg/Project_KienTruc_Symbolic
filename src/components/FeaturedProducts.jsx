@@ -53,7 +53,7 @@ const FeaturedProducts = () => {
       <div className="container">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="section-title mb-0">Sản phẩm nổi bật</h2>
-          <Link to="/products" className="btn btn-outline-primary">
+          <Link to="/products" className="btn btn-outline-dark">
             Xem tất cả
           </Link>
         </div>
@@ -95,7 +95,7 @@ const FeaturedProducts = () => {
                         )}
                       </div>
                       <button 
-                        className="btn btn-primary btn-sm"
+                        className="btn btn-dark btn-sm"
                         title="Thêm vào giỏ hàng"
                       >
                         <FiShoppingCart />

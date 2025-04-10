@@ -51,7 +51,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="newsletter py-5">
+      <section className="newsletter py-5 bg-light" style={{ backgroundColor: '#f8f9fa' }}>
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-lg-6 text-center">
@@ -65,7 +65,7 @@ const HomePage = () => {
                   className="form-control"
                   placeholder="Nhập địa chỉ email của bạn"
                 />
-                <button type="submit" className="btn btn-primary">
+                <button type="submit" className="btn btn-dark px-4" style={{ minWidth: '120px' }}>
                   Đăng ký
                 </button>
               </form>
