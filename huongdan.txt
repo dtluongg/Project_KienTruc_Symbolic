@@ -1,4 +1,0 @@
-B1: npm create vite@lastest 
-B2: name project + name pakage
-B3: react + javascript
-B4: cd name project -> npm install -> npm run dev
