@@ -1,0 +1,9 @@
+B1: clone code ~ git clone https://github.com/dtluongg/Project_KienTruc_Symbolic.git
+B2: kiểm tra branch ~ git branch -r
+B3: chuyển sang nhánh của mình ~ git checkout Luong_work
+B4: Trước khi code hoặc push thì kiểm tra xem mình đang ở nhánh nào ~ git branch
+B5: Sau khi kiểm tra đúng nhánh rồi thì code như bình thường và git add .; git commit -m ""; git push;
+
+
+------------------------------------------------------------------
+Trước khi code luôn luôn cập nhật nội dung mới ~ git pull | git fetch
