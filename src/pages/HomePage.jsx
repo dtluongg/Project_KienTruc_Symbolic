@@ -2,7 +2,7 @@ import Hero from '../components/Hero';
 import Categories from '../components/Categories';
 import FeaturedProducts from '../components/FeaturedProducts';
 import { FiTruck, FiRefreshCw, FiHeadphones, FiCreditCard } from 'react-icons/fi';
-
+import ChatBotGeminiAI from '../components/ChatBotGeminiAI/ChatBotGeminiAI';
 const features = [
   {
     icon: <FiTruck size={24} />,
@@ -32,7 +32,7 @@ const HomePage = () => {
       <Hero />
       <Categories />
       <FeaturedProducts />
-      
+      <ChatBotGeminiAI />
       <section className="features py-5 bg-light">
         <div className="container">
           <div className="row g-4">
