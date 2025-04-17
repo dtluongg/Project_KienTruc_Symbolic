@@ -1,3 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+@layer base {
+  body {
+    @apply bg-[#191b24] text-white font-sans;
+  }
+}
+
+@layer components {
+  /* Header styles */
+  .header-nav {
+    @apply fixed top-0 left-0 right-0 z-50 bg-[#191b24]/95 backdrop-blur-sm border-b border-gray-800;
+  }
+
+  /* Hero section */
+  .hero-section {
+    @apply relative min-h-[80vh] w-full bg-cover bg-center bg-fixed flex items-center pt-16;
+  }
+
+  .hero-content {
+    @apply max-w-2xl mx-auto text-center px-4;
+  }
+
+  .hero-title {
+    @apply text-5xl md:text-6xl font-bold mb-6 text-white leading-tight;
+  }
+
+  .hero-subtitle {
+    @apply text-xl text-gray-200 mb-8;
+  }
+
+  /* Category section */
+  .category-card {
+    @apply relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-all duration-300;
+  }
+
+  .category-image {
+    @apply w-full h-64 object-cover transition-transform duration-300;
+  }
+
+  .category-card:hover .category-image {
+    @apply scale-105;
+  }
+
+  .category-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6;
+  }
+
+  /* Product cards */
+  .product-card {
+    @apply bg-[#242731] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300;
+  }
+
+  .product-image {
+    @apply w-full h-64 object-cover;
+  }
+
+  .product-content {
+    @apply p-4;
+  }
+
+  .product-title {
+    @apply font-semibold text-lg mb-1 hover:text-indigo-400 transition;
+  }
+
+  .product-category {
+    @apply text-sm text-gray-400 mb-2;
+  }
+
+  .product-price {
+    @apply font-bold text-indigo-400;
+  }
+
+  .product-price-old {
+    @apply text-sm text-gray-500 line-through ml-2;
+  }
+
+  /* Newsletter section */
+  .newsletter-section {
+    @apply py-16 bg-cover bg-center;
+    background-image: linear-gradient(rgba(15, 17, 26, 0.95), rgba(15, 17, 26, 0.95));
+  }
+
+  .newsletter-content {
+    @apply max-w-3xl mx-auto text-center px-4;
+  }
+
+  .newsletter-form {
+    @apply flex flex-col sm:flex-row items-center justify-center gap-4;
+  }
+
+  .newsletter-input {
+    @apply flex-1 w-full sm:max-w-md px-6 py-3 bg-gray-800/50 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500;
+  }
+
+  .newsletter-button {
+    @apply w-full sm:w-auto min-w-[120px] px-8 py-3 bg-indigo-500 text-white rounded-full font-medium hover:bg-indigo-600 transition-colors flex-shrink-0;
+  }
+
+  /* Footer */
+  .footer {
+    @apply bg-[#0f111a] border-t border-gray-800 pt-12 pb-6;
+  }
+
+  .footer-title {
+    @apply text-lg font-semibold mb-4 text-gray-200;
+  }
+
+  .footer-link {
+    @apply text-gray-400 hover:text-indigo-400 transition-colors;
+  }
+
+  .social-icon {
+    @apply text-gray-400 hover:text-indigo-400 transition-colors;
+  }
+}
+
 /* General styles */
 body {
   font-family: 'Inter', sans-serif;

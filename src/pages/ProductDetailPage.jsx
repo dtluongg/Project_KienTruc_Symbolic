@@ -8,9 +8,12 @@ const ProductDetailPage = () => {
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mainImage, setMainImage] = useState(null);
   const [allImages, setAllImages] = useState([]);
 
   useEffect(() => {
@@ -19,7 +22,6 @@ const ProductDetailPage = () => {
         setLoading(true);
         console.log('Product slug:', slug);
 
-        // Lấy thông tin sản phẩm
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select(`
@@ -46,37 +48,30 @@ const ProductDetailPage = () => {
           .eq('slug', slug)
           .single();
 
-        if (productError) {
-          console.error('Lỗi khi lấy sản phẩm:', productError);
-          throw productError;
-        }
+        if (productError) throw productError;
 
-        console.log('Product data:', productData);
-        setProduct(productData);
-        
-        // Chọn variant mặc định (variant đầu tiên)
-        if (productData.productvariants?.length > 0) {
-          setSelectedVariant(productData.productvariants[0]);
-        }
-
-        // Lấy tất cả hình ảnh từ tất cả các biến thể
-        const allProductImages = [];
-        productData.productvariants?.forEach(variant => {
-          if (variant.productimages) {
-            allProductImages.push(...variant.productimages);
-          }
-        });
-        
-        // Loại bỏ các hình ảnh trùng lặp dựa trên image_id
-        const uniqueImages = Array.from(
-          new Map(allProductImages.map(img => [img.image_id, img])).values()
+        // Xử lý hình ảnh
+        const images = productData.productvariants.flatMap(variant => 
+          variant.productimages.map(img => ({
+            ...img,
+            variant_id: variant.variant_id
+          }))
         );
         
-        setAllImages(uniqueImages);
+        setProduct(productData);
+        setAllImages(images);
+        setMainImage(images.find(img => img.is_primary)?.image_url || images[0]?.image_url);
+        
+        // Set variant mặc định
+        if (productData.productvariants?.length > 0) {
+          const defaultVariant = productData.productvariants[0];
+          setSelectedVariant(defaultVariant);
+          setSelectedColor(defaultVariant.color);
+          setSelectedSize(defaultVariant.size);
+        }
 
-        setError(null);
       } catch (err) {
-        console.error('Lỗi khi lấy dữ liệu:', err);
+        console.error('Error fetching product:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -88,177 +83,183 @@ const ProductDetailPage = () => {
     }
   }, [slug]);
 
-  const handleQuantityChange = (change) => {
-    const newQuantity = quantity + change;
-    if (newQuantity >= 1 && newQuantity <= (selectedVariant?.stock_quantity || 1)) {
-      setQuantity(newQuantity);
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    const variant = product.productvariants.find(v => v.color === color && v.size === selectedSize);
+    if (variant) {
+      setSelectedVariant(variant);
+      const variantImage = allImages.find(img => img.variant_id === variant.variant_id && img.is_primary);
+      if (variantImage) setMainImage(variantImage.image_url);
     }
   };
 
-  const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
-    console.log('Adding to cart:', {
-      product: product.product_id,
-      variant: selectedVariant.variant_id,
-      quantity
-    });
+  const handleSizeChange = (size) => {
+    setSelectedSize(size);
+    const variant = product.productvariants.find(v => v.size === size && v.color === selectedColor);
+    if (variant) setSelectedVariant(variant);
+  };
+
+  const handleQuantityChange = (action) => {
+    if (action === 'increase') {
+      setQuantity(prev => prev + 1);
+    } else if (action === 'decrease' && quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
   };
 
   if (loading) return (
-    <div className="container py-5">
-      <div className="text-center">
-        <h2>Đang tải...</h2>
+    <div className="min-h-screen pt-20 pb-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="animate-pulse">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="aspect-w-1 aspect-h-1 bg-gray-700 rounded-lg"></div>
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-700 rounded w-3/4"></div>
+              <div className="h-6 bg-gray-700 rounded w-1/4"></div>
+              <div className="h-4 bg-gray-700 rounded w-full"></div>
+              <div className="h-4 bg-gray-700 rounded w-full"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className="container py-5">
-      <div className="text-center">
-        <h2>Có lỗi xảy ra</h2>
-        <p className="text-danger">{error}</p>
+    <div className="min-h-screen pt-20 pb-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Có lỗi xảy ra</h2>
+          <p className="text-red-500">{error}</p>
+        </div>
       </div>
     </div>
   );
 
-  if (!product) return (
-    <div className="container py-5">
-      <div className="text-center">
-        <h2>Không tìm thấy sản phẩm</h2>
-      </div>
-    </div>
-  );
+  if (!product) return null;
 
-  // Lấy hình ảnh chính từ tất cả hình ảnh
-  const primaryImage = allImages.find(img => img.is_primary)?.image_url || allImages[0]?.image_url || '/placeholder.jpg';
-
-  // Lấy danh sách các màu sắc duy nhất
   const uniqueColors = [...new Set(product.productvariants?.map(variant => variant.color) || [])];
+  const uniqueSizes = [...new Set(product.productvariants?.map(variant => variant.size) || [])];
 
   return (
-    <div className="container py-5">
-      <div className="row">
-        <div className="col-md-6">
-          <img
-            src={primaryImage}
-            alt={product.product_name}
-            className="img-fluid rounded"
-            style={{ width: '100%', height: 'auto', objectFit: 'cover' }}
-          />
-          <div className="row mt-3">
-            {allImages.map((image) => (
-              <div key={image.image_id} className="col-3">
-                <img
-                  src={image.image_url}
-                  alt={image.alt_text || product.product_name}
-                  className="img-fluid rounded cursor-pointer"
-                  style={{ width: '100%', height: '100px', objectFit: 'cover' }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="col-md-6">
-          <h1 className="mb-3">{product.product_name}</h1>
-          <p className="text-muted mb-3">
-            Danh mục: {product.categories.category_name}
-          </p>
-          <div className="mb-4">
-            <h3 className="text-primary mb-0">
-              {formatCurrency(selectedVariant?.price || 0)}
-            </h3>
-          </div>
-          <p className="mb-4">{product.description}</p>
-
-          {/* Hiển thị màu sắc */}
-          {uniqueColors.length > 0 && (
-            <div className="mb-4">
-              <h5>Màu sắc</h5>
-              <div className="d-flex flex-wrap gap-2">
-                {uniqueColors.map((color) => {
-                  // Tìm variant có màu này
-                  const variantWithColor = product.productvariants.find(v => v.color === color);
-                  
-                  return (
-                    <button
-                      key={color}
-                      className={`btn ${
-                        selectedVariant?.color === color
-                          ? 'btn-dark'
-                          : 'btn-outline-dark'
-                      }`}
-                      onClick={() => setSelectedVariant(variantWithColor)}
-                    >
-                      {color}
-                    </button>
-                  );
-                })}
-              </div>
+    <div className="min-h-screen pt-20 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Product Images */}
+          <div className="space-y-4">
+            <div className="aspect-w-1 aspect-h-1 bg-[#242731] rounded-lg overflow-hidden">
+              <img
+                src={mainImage}
+                alt={product.product_name}
+                className="w-full h-full object-cover"
+              />
             </div>
-          )}
-
-          {/* Hiển thị kích thước */}
-          {product.productvariants?.some(v => v.size) && (
-            <div className="mb-4">
-              <h5>Kích thước</h5>
-              <div className="btn-group">
-                {product.productvariants
-                  .filter(v => v.color === selectedVariant?.color)
-                  .map((variant) => (
-                    <button
-                      key={variant.variant_id}
-                      className={`btn ${
-                        selectedVariant?.variant_id === variant.variant_id
-                          ? 'btn-dark'
-                          : 'btn-outline-dark'
-                      }`}
-                      onClick={() => setSelectedVariant(variant)}
-                    >
-                      {variant.size}
-                    </button>
-                  ))}
-              </div>
+            <div className="grid grid-cols-4 gap-4">
+              {allImages.map((image) => (
+                <button
+                  key={image.image_id}
+                  onClick={() => setMainImage(image.image_url)}
+                  className={`aspect-w-1 aspect-h-1 rounded-lg overflow-hidden bg-[#242731] ${
+                    mainImage === image.image_url ? 'ring-2 ring-indigo-500' : ''
+                  }`}
+                >
+                  <img
+                    src={image.image_url}
+                    alt={image.alt_text || product.product_name}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
             </div>
-          )}
-
-          <div className="mb-4">
-            <h5>Số lượng</h5>
-            <div className="d-flex align-items-center">
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1}
-              >
-                <FiMinus />
-              </button>
-              <span className="mx-3">{quantity}</span>
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => handleQuantityChange(1)}
-                disabled={quantity >= (selectedVariant?.stock_quantity || 1)}
-              >
-                <FiPlus />
-              </button>
-            </div>
-            <small className="text-muted">
-              Còn {selectedVariant?.stock_quantity || 0} sản phẩm
-            </small>
           </div>
 
-          <button
-            className="btn btn-dark btn-lg w-100 mb-3"
-            onClick={handleAddToCart}
-            disabled={!selectedVariant || selectedVariant.stock_quantity === 0}
-          >
-            <FiShoppingCart className="me-2" />
-            Thêm vào giỏ hàng
-          </button>
+          {/* Product Info */}
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>
+              <p className="text-gray-400">
+                Danh mục: {product.categories.category_name}
+              </p>
+            </div>
 
-          {selectedVariant?.stock_quantity === 0 && (
-            <p className="text-danger text-center">
-              Sản phẩm đã hết hàng
-            </p>
-          )}
+            <div>
+              <h2 className="text-2xl font-bold text-indigo-500">
+                {formatCurrency(selectedVariant?.price || 0)}
+              </h2>
+            </div>
+
+            <div>
+              <p className="text-gray-300">{product.description}</p>
+            </div>
+
+            {/* Color Selection */}
+            <div>
+              <h3 className="text-sm font-medium mb-3">Màu sắc</h3>
+              <div className="flex flex-wrap gap-2">
+                {uniqueColors.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => handleColorChange(color)}
+                    className={`px-4 py-2 rounded-full border ${
+                      selectedColor === color
+                        ? 'border-indigo-500 text-indigo-500'
+                        : 'border-gray-600 text-gray-400 hover:border-gray-400'
+                    }`}
+                  >
+                    {color}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Size Selection */}
+            <div>
+              <h3 className="text-sm font-medium mb-3">Kích thước</h3>
+              <div className="flex flex-wrap gap-2">
+                {uniqueSizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => handleSizeChange(size)}
+                    className={`w-12 h-12 rounded-full border flex items-center justify-center ${
+                      selectedSize === size
+                        ? 'border-indigo-500 text-indigo-500'
+                        : 'border-gray-600 text-gray-400 hover:border-gray-400'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quantity */}
+            <div>
+              <h3 className="text-sm font-medium mb-3">Số lượng</h3>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => handleQuantityChange('decrease')}
+                  className="w-10 h-10 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:border-gray-400"
+                >
+                  <FiMinus size={16} />
+                </button>
+                <span className="text-xl font-medium w-12 text-center">{quantity}</span>
+                <button
+                  onClick={() => handleQuantityChange('increase')}
+                  className="w-10 h-10 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:border-gray-400"
+                >
+                  <FiPlus size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Add to Cart */}
+            <button
+              className="w-full py-4 bg-indigo-500 text-white rounded-full font-medium hover:bg-indigo-600 transition-colors flex items-center justify-center space-x-2"
+            >
+              <FiShoppingCart size={20} />
+              <span>Thêm vào giỏ hàng</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

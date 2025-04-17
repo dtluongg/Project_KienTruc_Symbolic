@@ -5,10 +5,10 @@ const Categories = () => {
   const { categories, loading, error } = useCategories();
 
   if (loading) return (
-    <section className="categories py-5">
-      <div className="container">
+    <section className="py-16">
+      <div className="container mx-auto px-4">
         <div className="text-center">
-          <h2 className="section-title">Danh mục sản phẩm</h2>
+          <h2 className="text-3xl font-bold mb-4">Danh mục sản phẩm</h2>
           <p>Đang tải...</p>
         </div>
       </div>
@@ -16,11 +16,11 @@ const Categories = () => {
   );
 
   if (error) return (
-    <section className="categories py-5">
-      <div className="container">
+    <section className="py-16">
+      <div className="container mx-auto px-4">
         <div className="text-center">
-          <h2 className="section-title">Danh mục sản phẩm</h2>
-          <p className="text-danger">Có lỗi xảy ra: {error}</p>
+          <h2 className="text-3xl font-bold mb-4">Danh mục sản phẩm</h2>
+          <p className="text-red-500">Có lỗi xảy ra: {error}</p>
         </div>
       </div>
     </section>
@@ -28,10 +28,10 @@ const Categories = () => {
 
   if (categories.length === 0) {
     return (
-      <section className="categories py-5">
-        <div className="container">
+      <section className="py-16">
+        <div className="container mx-auto px-4">
           <div className="text-center">
-            <h2 className="section-title">Danh mục sản phẩm</h2>
+            <h2 className="text-3xl font-bold mb-4">Danh mục sản phẩm</h2>
             <p>Chưa có danh mục nào</p>
           </div>
         </div>
@@ -40,37 +40,37 @@ const Categories = () => {
   }
 
   return (
-    <section className="categories py-5">
-      <div className="container">
-        <h2 className="text-center mb-4">Danh mục sản phẩm</h2>
-        <p className="text-center text-muted mb-5">
+    <section className="py-16">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-4">Danh mục sản phẩm</h2>
+        <p className="text-gray-400 text-center max-w-3xl mx-auto mb-12">
           Khám phá các danh mục sản phẩm đa dạng của chúng tôi, từ trang phục hàng ngày đến
           những bộ trang phục cho các dịp đặc biệt.
         </p>
 
-        <div className="row g-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category) => (
-            <div key={category.category_id} className="col-md-6 col-lg-3">
-              <Link
-                to={`/products?category=${category.slug}`}
-                className="text-decoration-none"
-              >
-                <div className="card h-100 border-0 shadow-sm">
-                  <img
-                    src={category.image_url || '/placeholder.jpg'}
-                    alt={category.category_name}
-                    className="card-img-top"
-                    style={{ height: '200px', objectFit: 'cover' }}
-                  />
-                  <div className="card-body text-center">
-                    <h5 className="card-title mb-2">{category.category_name}</h5>
-                    <p className="card-text text-muted">
-                      {category.count} sản phẩm
-                    </p>
-                  </div>
+            <Link
+              key={category.category_id}
+              to={`/products?category=${category.slug}`}
+              className="category-card group"
+            >
+              <div className="relative h-64 overflow-hidden rounded-lg">
+                <img
+                  src={category.image_url || '/placeholder.jpg'}
+                  alt={category.category_name}
+                  className="category-image"
+                />
+                <div className="category-overlay">
+                  <h3 className="text-xl font-semibold text-white mb-1">
+                    {category.category_name}
+                  </h3>
+                  <p className="text-gray-200">
+                    {category.count} sản phẩm
+                  </p>
                 </div>
-              </Link>
-            </div>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
