@@ -1,15 +1,30 @@
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiUser } from 'react-icons/fi';
-import { useState } from 'react';
+import { FiShoppingCart, FiUser, FiMessageCircle } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const logoUrl = "https://vbrbponwvctuycpzhrfe.supabase.co/storage/v1/object/public/symbolicv3/symbolic%20logo.png";
+  const [scrolled, setScrolled] = useState(false);
+  const logoUrl = "https://xiocmtlosfcsrydhgjvl.supabase.co/storage/v1/object/public/symbolicv3/symbolic%20logo.png";
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      if (isScrolled !== scrolled) {
+        setScrolled(isScrolled);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [scrolled]);
 
   return (
-    <nav className="bg-[#191b24] fixed w-full z-50 top-0 border-b border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="fixed w-full z-[9999] top-0 px-4 py-2 bg-transparent">
+      <div className={`max-w-7xl mx-auto backdrop-blur-sm rounded-full border border-[#93909f] transition-colors duration-300 shadow-lg ${
+        scrolled ? 'bg-[#93909f]/90' : 'bg-[#a8a7b3]/90'
+      }`}>
+        <div className="flex items-center justify-between h-14 px-6">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/">
@@ -18,34 +33,40 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+          <div className="hidden md:flex items-center space-x-1">
+            <Link to="/" className="text-[#1f1f1f] hover:text-black px-4 py-2 text-sm font-medium rounded-full hover:bg-[#93909f]/50">
               Trang chủ
             </Link>
-            <Link to="/products" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+            <Link to="/products" className="text-[#1f1f1f] hover:text-black px-4 py-2 text-sm font-medium rounded-full hover:bg-[#93909f]/50">
               Sản phẩm
             </Link>
-            <Link to="/about" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+            <Link to="/about" className="text-[#1f1f1f] hover:text-black px-4 py-2 text-sm font-medium rounded-full hover:bg-[#93909f]/50">
               Giới thiệu
             </Link>
-            <Link to="/contact" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+            <Link to="/contact" className="text-[#1f1f1f] hover:text-black px-4 py-2 text-sm font-medium rounded-full hover:bg-[#93909f]/50">
               Liên hệ
             </Link>
           </div>
 
           {/* Search and Icons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-2">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Tìm kiếm..."
-                className="w-64 bg-gray-800 text-white px-4 py-1 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-64 bg-[#93909f]/50 text-[#1f1f1f] px-4 py-1.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#858291] border border-[#93909f] placeholder-[#4d4d4d]"
               />
             </div>
-            <Link to="/cart" className="text-gray-300 hover:text-white p-2">
+            <button 
+              className="text-[#1f1f1f] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50"
+              onClick={() => window.Tawk_API?.toggle()}
+            >
+              <FiMessageCircle className="h-5 w-5" />
+            </button>
+            <Link to="/cart" className="text-[#1f1f1f] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50">
               <FiShoppingCart className="h-5 w-5" />
             </Link>
-            <Link to="/auth" className="text-gray-300 hover:text-white p-2">
+            <Link to="/auth" className="text-[#1f1f1f] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50">
               <FiUser className="h-5 w-5" />
             </Link>
           </div>
@@ -54,9 +75,9 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-300 hover:text-white focus:outline-none"
+              className="text-[#1f1f1f] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -65,27 +86,33 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <Link to="/" className="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">
+          <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-[#858291] border border-[#93909f] rounded-2xl">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link to="/" className="text-[#1f1f1f] hover:text-black block px-3 py-2 text-base font-medium rounded-full hover:bg-[#93909f]/50">
                 Trang chủ
               </Link>
-              <Link to="/products" className="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">
+              <Link to="/products" className="text-[#1f1f1f] hover:text-black block px-3 py-2 text-base font-medium rounded-full hover:bg-[#93909f]/50">
                 Sản phẩm
               </Link>
-              <Link to="/about" className="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">
+              <Link to="/about" className="text-[#1f1f1f] hover:text-black block px-3 py-2 text-base font-medium rounded-full hover:bg-[#93909f]/50">
                 Giới thiệu
               </Link>
-              <Link to="/contact" className="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">
+              <Link to="/contact" className="text-[#1f1f1f] hover:text-black block px-3 py-2 text-base font-medium rounded-full hover:bg-[#93909f]/50">
                 Liên hệ
               </Link>
             </div>
-            <div className="px-4 py-3">
-              <div className="flex items-center space-x-4">
-                <Link to="/cart" className="text-gray-300 hover:text-white">
+            <div className="px-4 py-3 border-t border-[#93909f]">
+              <div className="flex items-center space-x-2">
+                <button 
+                  className="text-[#1f1f1f] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50"
+                  onClick={() => window.Tawk_API?.toggle()}
+                >
+                  <FiMessageCircle className="h-5 w-5" />
+                </button>
+                <Link to="/cart" className="text-[#1f1f1f] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50">
                   <FiShoppingCart className="h-5 w-5" />
                 </Link>
-                <Link to="/auth" className="text-gray-300 hover:text-white">
+                <Link to="/auth" className="text-[#1f1f1f] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50">
                   <FiUser className="h-5 w-5" />
                 </Link>
               </div>
@@ -93,7 +120,7 @@ const Navbar = () => {
                 <input
                   type="text"
                   placeholder="Tìm kiếm..."
-                  className="w-full bg-gray-800 text-white px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-[#93909f]/50 text-[#1f1f1f] px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#858291] border border-[#93909f] placeholder-[#4d4d4d]"
                 />
               </div>
             </div>

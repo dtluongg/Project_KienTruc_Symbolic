@@ -36,18 +36,7 @@ const CategoryPage = () => {
         // Lấy danh sách sản phẩm của danh mục
         const { data: productsData, error: productsError } = await supabase
           .from('products')
-          .select(`
-            *,
-            productvariants (
-              variant_id,
-              price,
-              productimages (
-                image_id,
-                image_url,
-                is_primary
-              )
-            )
-          `)
+          .select('*')
           .eq('category_id', categoryData.category_id)
           .eq('is_active', true);
 
@@ -55,17 +44,33 @@ const CategoryPage = () => {
           console.error('Lỗi khi lấy sản phẩm:', productsError);
           throw productsError;
         }
-        console.log('Products data:', productsData);
+
+        // Lấy màu sắc của tất cả sản phẩm
+        const { data: colorsData, error: colorsError } = await supabase
+          .from('product_colors')
+          .select('*')
+          .in('product_id', productsData.map(p => p.product_id));
+
+        if (colorsError) throw colorsError;
+
+        // Lấy ảnh của tất cả sản phẩm
+        const { data: imagesData, error: imagesError } = await supabase
+          .from('product_images')
+          .select('*')
+          .in('color_id', colorsData.map(c => c.color_id));
+
+        if (imagesError) throw imagesError;
 
         // Xử lý dữ liệu sản phẩm
         const processedProducts = productsData.map(product => {
-          const primaryVariant = product.productvariants?.[0];
-          const primaryImage = primaryVariant?.productimages?.find(img => img.is_primary)?.image_url;
+          const productColors = colorsData.filter(c => c.product_id === product.product_id);
+          const primaryColor = productColors[0];
+          const primaryImages = imagesData.filter(img => img.color_id === primaryColor?.color_id);
+          const primaryImage = primaryImages[0]?.image_url;
 
           return {
             ...product,
-            price: primaryVariant?.price || 0,
-            image_url: primaryImage || '/placeholder.jpg'
+            primaryImage: primaryImage || '/placeholder.jpg'
           };
         });
 
@@ -135,7 +140,7 @@ const CategoryPage = () => {
             <div key={product.product_id} className="product-card group">
               <Link to={`/product/${product.slug}`} className="block relative">
                 <img
-                  src={product.image_url}
+                  src={product.primaryImage}
                   alt={product.product_name}
                   className="product-image"
                 />
@@ -152,8 +157,13 @@ const CategoryPage = () => {
                 </p>
                 <div className="flex justify-between items-center mt-4">
                   <span className="product-price">
-                    {formatCurrency(product.price)}
+                    {formatCurrency(product.base_price)}
                   </span>
+                  {product.compare_at_price > product.base_price && (
+                    <span className="product-price-old">
+                      {formatCurrency(product.compare_at_price)}
+                    </span>
+                  )}
                   <button 
                     className="w-10 h-10 flex items-center justify-center bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors"
                     title="Thêm vào giỏ hàng"

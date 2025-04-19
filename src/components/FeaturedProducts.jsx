@@ -62,6 +62,11 @@ const FeaturedProducts = () => {
           {featuredProducts.map(product => {
             console.log('Rendering product:', product);
             const firstVariant = product.variants[0];
+            const firstSize = firstVariant?.sizes[0];
+            const basePrice = product.base_price;
+            const priceAdjust = firstSize?.price_adjust || 0;
+            const finalPrice = basePrice + priceAdjust;
+
             return (
               <div key={product.product_id} className="product-card">
                 <Link to={`/product/${product.slug}`} className="block relative">
@@ -84,11 +89,11 @@ const FeaturedProducts = () => {
                   <div className="flex justify-between items-center mt-4">
                     <div className="flex items-center gap-2">
                       <span className="product-price">
-                        {formatCurrency(firstVariant?.price || 0)}
+                        {formatCurrency(finalPrice)}
                       </span>
-                      {firstVariant?.compare_at_price > firstVariant?.price && (
+                      {product.compare_at_price > finalPrice && (
                         <span className="product-price-old">
-                          {formatCurrency(firstVariant.compare_at_price)}
+                          {formatCurrency(product.compare_at_price)}
                         </span>
                       )}
                     </div>

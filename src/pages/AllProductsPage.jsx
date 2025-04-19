@@ -14,6 +14,7 @@ const AllProductsPage = () => {
       try {
         setLoading(true);
 
+        // Lấy danh sách sản phẩm
         const { data: productsData, error: productsError } = await supabase
           .from('products')
           .select(`
@@ -22,30 +23,61 @@ const AllProductsPage = () => {
               category_id,
               category_name,
               slug
-            ),
-            productvariants (
-              variant_id,
-              price,
-              productimages (
-                image_id,
-                image_url,
-                is_primary
-              )
             )
           `)
           .eq('is_active', true);
 
         if (productsError) throw productsError;
 
+        // Lấy màu sắc của tất cả sản phẩm
+        const { data: colorsData, error: colorsError } = await supabase
+          .from('product_colors')
+          .select('*')
+          .in('product_id', productsData.map(p => p.product_id));
+
+        if (colorsError) throw colorsError;
+
+        // Lấy kích thước của tất cả sản phẩm
+        const { data: sizesData, error: sizesError } = await supabase
+          .from('product_sizes')
+          .select('*')
+          .in('product_id', productsData.map(p => p.product_id));
+
+        if (sizesError) throw sizesError;
+
+        // Lấy tồn kho
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from('product_inventory')
+          .select('*')
+          .in('color_id', colorsData.map(c => c.color_id));
+
+        if (inventoryError) throw inventoryError;
+
+        // Lấy ảnh của tất cả sản phẩm
+        const { data: imagesData, error: imagesError } = await supabase
+          .from('product_images')
+          .select('*')
+          .in('color_id', colorsData.map(c => c.color_id));
+
+        if (imagesError) throw imagesError;
+
         // Xử lý dữ liệu sản phẩm
         const processedProducts = productsData.map(product => {
-          const primaryVariant = product.productvariants?.[0];
-          const primaryImage = primaryVariant?.productimages?.find(img => img.is_primary)?.image_url;
+          const productColors = colorsData.filter(c => c.product_id === product.product_id);
+          const primaryColor = productColors[0];
+          const primaryImages = imagesData.filter(img => img.color_id === primaryColor?.color_id);
+          const primaryImage = primaryImages[0]?.image_url;
+
+          const productSizes = sizesData.filter(s => s.product_id === product.product_id);
+          const firstSize = productSizes[0];
+          const basePrice = product.base_price;
+          const priceAdjust = firstSize?.price_adjust || 0;
+          const finalPrice = basePrice + priceAdjust;
 
           return {
             ...product,
-            price: primaryVariant?.price || 0,
-            image_url: primaryImage || '/placeholder.jpg'
+            primaryImage: primaryImage || '/placeholder.jpg',
+            finalPrice
           };
         });
 
@@ -102,7 +134,7 @@ const AllProductsPage = () => {
             <div key={product.product_id} className="product-card group">
               <Link to={`/product/${product.slug}`} className="block relative">
                 <img
-                  src={product.image_url}
+                  src={product.primaryImage}
                   alt={product.product_name}
                   className="product-image"
                 />
@@ -118,9 +150,16 @@ const AllProductsPage = () => {
                   {product.categories.category_name}
                 </p>
                 <div className="flex justify-between items-center mt-4">
-                  <span className="product-price">
-                    {formatCurrency(product.price)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="product-price">
+                      {formatCurrency(product.finalPrice)}
+                    </span>
+                    {product.compare_at_price > product.finalPrice && (
+                      <span className="product-price-old">
+                        {formatCurrency(product.compare_at_price)}
+                      </span>
+                    )}
+                  </div>
                   <button 
                     className="w-10 h-10 flex items-center justify-center bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors"
                     title="Thêm vào giỏ hàng"

@@ -7,7 +7,6 @@ import { FiShoppingCart, FiMinus, FiPlus } from 'react-icons/fi';
 const ProductDetailPage = () => {
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -22,6 +21,7 @@ const ProductDetailPage = () => {
         setLoading(true);
         console.log('Product slug:', slug);
 
+        // Lấy thông tin sản phẩm
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select(`
@@ -30,19 +30,6 @@ const ProductDetailPage = () => {
               category_id,
               category_name,
               slug
-            ),
-            productvariants (
-              variant_id,
-              size,
-              color,
-              price,
-              stock_quantity,
-              productimages (
-                image_id,
-                image_url,
-                alt_text,
-                is_primary
-              )
             )
           `)
           .eq('slug', slug)
@@ -50,24 +37,69 @@ const ProductDetailPage = () => {
 
         if (productError) throw productError;
 
-        // Xử lý hình ảnh
-        const images = productData.productvariants.flatMap(variant => 
-          variant.productimages.map(img => ({
-            ...img,
-            variant_id: variant.variant_id
-          }))
-        );
+        // Lấy màu sắc của sản phẩm
+        const { data: colorsData, error: colorsError } = await supabase
+          .from('product_colors')
+          .select('*')
+          .eq('product_id', productData.product_id);
+
+        if (colorsError) throw colorsError;
+
+        // Lấy kích thước của sản phẩm
+        const { data: sizesData, error: sizesError } = await supabase
+          .from('product_sizes')
+          .select('*')
+          .eq('product_id', productData.product_id);
+
+        if (sizesError) throw sizesError;
+
+        // Lấy tồn kho
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from('product_inventory')
+          .select('*')
+          .in('color_id', colorsData.map(c => c.color_id));
+
+        if (inventoryError) throw inventoryError;
+
+        // Lấy ảnh sản phẩm
+        const { data: imagesData, error: imagesError } = await supabase
+          .from('product_images')
+          .select('*')
+          .in('color_id', colorsData.map(c => c.color_id));
+
+        if (imagesError) throw imagesError;
+
+        // Kết hợp dữ liệu
+        const variants = colorsData.map(color => {
+          const colorSizes = sizesData.filter(s => s.product_id === productData.product_id);
+          const colorInventory = inventoryData.filter(i => i.color_id === color.color_id);
+          const colorImages = imagesData.filter(img => img.color_id === color.color_id);
+
+          return {
+            color,
+            sizes: colorSizes.map(size => ({
+              ...size,
+              stock: colorInventory.find(i => i.size_id === size.size_id)?.stock_quantity || 0
+            })),
+            images: colorImages
+          };
+        });
+
+        const processedProduct = {
+          ...productData,
+          variants
+        };
+
+        setProduct(processedProduct);
+        setAllImages(imagesData);
+        setMainImage(imagesData[0]?.image_url);
         
-        setProduct(productData);
-        setAllImages(images);
-        setMainImage(images.find(img => img.is_primary)?.image_url || images[0]?.image_url);
-        
-        // Set variant mặc định
-        if (productData.productvariants?.length > 0) {
-          const defaultVariant = productData.productvariants[0];
-          setSelectedVariant(defaultVariant);
-          setSelectedColor(defaultVariant.color);
-          setSelectedSize(defaultVariant.size);
+        // Set màu và kích thước mặc định
+        if (variants.length > 0) {
+          setSelectedColor(variants[0].color);
+          if (variants[0].sizes.length > 0) {
+            setSelectedSize(variants[0].sizes[0]);
+          }
         }
 
       } catch (err) {
@@ -85,18 +117,15 @@ const ProductDetailPage = () => {
 
   const handleColorChange = (color) => {
     setSelectedColor(color);
-    const variant = product.productvariants.find(v => v.color === color && v.size === selectedSize);
+    const variant = product.variants.find(v => v.color.color_id === color.color_id);
     if (variant) {
-      setSelectedVariant(variant);
-      const variantImage = allImages.find(img => img.variant_id === variant.variant_id && img.is_primary);
-      if (variantImage) setMainImage(variantImage.image_url);
+      const variantImage = variant.images[0]?.image_url;
+      if (variantImage) setMainImage(variantImage);
     }
   };
 
   const handleSizeChange = (size) => {
     setSelectedSize(size);
-    const variant = product.productvariants.find(v => v.size === size && v.color === selectedColor);
-    if (variant) setSelectedVariant(variant);
   };
 
   const handleQuantityChange = (action) => {
@@ -138,8 +167,10 @@ const ProductDetailPage = () => {
 
   if (!product) return null;
 
-  const uniqueColors = [...new Set(product.productvariants?.map(variant => variant.color) || [])];
-  const uniqueSizes = [...new Set(product.productvariants?.map(variant => variant.size) || [])];
+  const selectedVariant = product.variants.find(v => v.color.color_id === selectedColor?.color_id);
+  const basePrice = product.base_price;
+  const priceAdjust = selectedSize?.price_adjust || 0;
+  const finalPrice = basePrice + priceAdjust;
 
   return (
     <div className="min-h-screen pt-20 pb-12">
@@ -154,18 +185,20 @@ const ProductDetailPage = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-5 gap-2">
               {allImages.map((image) => (
                 <button
                   key={image.image_id}
                   onClick={() => setMainImage(image.image_url)}
-                  className={`aspect-w-1 aspect-h-1 rounded-lg overflow-hidden bg-[#242731] ${
-                    mainImage === image.image_url ? 'ring-2 ring-indigo-500' : ''
+                  className={`aspect-w-1 aspect-h-1 rounded-lg overflow-hidden bg-[#242731] transition-all duration-200 ${
+                    mainImage === image.image_url 
+                      ? 'ring-2 ring-indigo-500 scale-95' 
+                      : 'hover:ring-2 hover:ring-indigo-500/50 hover:scale-95'
                   }`}
                 >
                   <img
                     src={image.image_url}
-                    alt={image.alt_text || product.product_name}
+                    alt={`${product.product_name} - Ảnh ${image.image_id}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -184,8 +217,13 @@ const ProductDetailPage = () => {
 
             <div>
               <h2 className="text-2xl font-bold text-indigo-500">
-                {formatCurrency(selectedVariant?.price || 0)}
+                {formatCurrency(finalPrice)}
               </h2>
+              {product.compare_at_price > finalPrice && (
+                <span className="text-gray-400 line-through ml-2">
+                  {formatCurrency(product.compare_at_price)}
+                </span>
+              )}
             </div>
 
             <div>
@@ -196,17 +234,17 @@ const ProductDetailPage = () => {
             <div>
               <h3 className="text-sm font-medium mb-3">Màu sắc</h3>
               <div className="flex flex-wrap gap-2">
-                {uniqueColors.map((color) => (
+                {product.variants.map((variant) => (
                   <button
-                    key={color}
-                    onClick={() => handleColorChange(color)}
+                    key={variant.color.color_id}
+                    onClick={() => handleColorChange(variant.color)}
                     className={`px-4 py-2 rounded-full border ${
-                      selectedColor === color
+                      selectedColor?.color_id === variant.color.color_id
                         ? 'border-indigo-500 text-indigo-500'
                         : 'border-gray-600 text-gray-400 hover:border-gray-400'
                     }`}
                   >
-                    {color}
+                    {variant.color.color_name}
                   </button>
                 ))}
               </div>
@@ -216,17 +254,17 @@ const ProductDetailPage = () => {
             <div>
               <h3 className="text-sm font-medium mb-3">Kích thước</h3>
               <div className="flex flex-wrap gap-2">
-                {uniqueSizes.map((size) => (
+                {selectedVariant?.sizes.map((size) => (
                   <button
-                    key={size}
+                    key={size.size_id}
                     onClick={() => handleSizeChange(size)}
                     className={`w-12 h-12 rounded-full border flex items-center justify-center ${
-                      selectedSize === size
+                      selectedSize?.size_id === size.size_id
                         ? 'border-indigo-500 text-indigo-500'
                         : 'border-gray-600 text-gray-400 hover:border-gray-400'
                     }`}
                   >
-                    {size}
+                    {size.size_name}
                   </button>
                 ))}
               </div>
