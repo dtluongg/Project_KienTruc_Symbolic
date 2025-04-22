@@ -12,32 +12,24 @@ export const useCategories = () => {
         setLoading(true);
         console.log('Đang lấy categories...');
 
-        // Lấy danh sách categories
+        // Lấy danh sách categories và số lượng sản phẩm trong một lần truy vấn
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('categories')
-          .select('*');
-        
+          .select(`
+            *,
+            products:products!inner (
+              product_id
+            )
+          `)
+          .eq('products.is_active', true);
+
         if (categoriesError) throw categoriesError;
         console.log('Categories:', categoriesData);
 
-        // Lấy số lượng sản phẩm cho mỗi category
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('category_id')
-          .eq('is_active', true);
-
-        if (productsError) throw productsError;
-
-        // Đếm số lượng sản phẩm cho mỗi category
-        const productCounts = productsData.reduce((acc, product) => {
-          acc[product.category_id] = (acc[product.category_id] || 0) + 1;
-          return acc;
-        }, {});
-
-        // Kết hợp dữ liệu
+        // Xử lý dữ liệu
         const processedCategories = categoriesData.map(category => ({
           ...category,
-          count: productCounts[category.category_id] || 0
+          count: category.products?.length || 0
         }));
 
         console.log('Processed Categories:', processedCategories);

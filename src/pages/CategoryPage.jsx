@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { formatCurrency } from '../utils/format';
 import { FiShoppingCart } from 'react-icons/fi';
 
 const CategoryPage = () => {
-  const [searchParams] = useSearchParams();
-  const categorySlug = searchParams.get('category');
+  const { slug } = useParams();
+  const categorySlug = slug;
   
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState(null);
@@ -36,13 +36,28 @@ const CategoryPage = () => {
         // Lấy danh sách sản phẩm của danh mục
         const { data: productsData, error: productsError } = await supabase
           .from('products')
-          .select('*')
+          .select(`
+            *,
+            categories (
+              category_id,
+              category_name,
+              slug
+            )
+          `)
           .eq('category_id', categoryData.category_id)
           .eq('is_active', true);
 
         if (productsError) {
           console.error('Lỗi khi lấy sản phẩm:', productsError);
           throw productsError;
+        }
+        console.log('Products data:', productsData);
+
+        if (!productsData || productsData.length === 0) {
+          console.log('Không tìm thấy sản phẩm nào trong danh mục');
+          setProducts([]);
+          setLoading(false);
+          return;
         }
 
         // Lấy màu sắc của tất cả sản phẩm
@@ -52,6 +67,25 @@ const CategoryPage = () => {
           .in('product_id', productsData.map(p => p.product_id));
 
         if (colorsError) throw colorsError;
+        console.log('Colors data:', colorsData);
+
+        // Lấy kích thước của tất cả sản phẩm
+        const { data: sizesData, error: sizesError } = await supabase
+          .from('product_sizes')
+          .select('*')
+          .in('product_id', productsData.map(p => p.product_id));
+
+        if (sizesError) throw sizesError;
+        console.log('Sizes data:', sizesData);
+
+        // Lấy tồn kho
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from('product_inventory')
+          .select('*')
+          .in('color_id', colorsData.map(c => c.color_id));
+
+        if (inventoryError) throw inventoryError;
+        console.log('Inventory data:', inventoryData);
 
         // Lấy ảnh của tất cả sản phẩm
         const { data: imagesData, error: imagesError } = await supabase
@@ -60,6 +94,7 @@ const CategoryPage = () => {
           .in('color_id', colorsData.map(c => c.color_id));
 
         if (imagesError) throw imagesError;
+        console.log('Images data:', imagesData);
 
         // Xử lý dữ liệu sản phẩm
         const processedProducts = productsData.map(product => {
@@ -68,9 +103,16 @@ const CategoryPage = () => {
           const primaryImages = imagesData.filter(img => img.color_id === primaryColor?.color_id);
           const primaryImage = primaryImages[0]?.image_url;
 
+          const productSizes = sizesData.filter(s => s.product_id === product.product_id);
+          const firstSize = productSizes[0];
+          const basePrice = product.base_price;
+          const priceAdjust = firstSize?.price_adjustment || 0;
+          const finalPrice = basePrice + priceAdjust;
+
           return {
             ...product,
-            primaryImage: primaryImage || '/placeholder.jpg'
+            primaryImage: primaryImage || '/placeholder.jpg',
+            finalPrice
           };
         });
 
@@ -157,7 +199,7 @@ const CategoryPage = () => {
                 </p>
                 <div className="flex justify-between items-center mt-4">
                   <span className="product-price">
-                    {formatCurrency(product.base_price)}
+                    {formatCurrency(product.finalPrice)}
                   </span>
                   {product.compare_at_price > product.base_price && (
                     <span className="product-price-old">

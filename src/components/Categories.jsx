@@ -52,7 +52,7 @@ const Categories = () => {
           {categories.map((category) => (
             <Link
               key={category.category_id}
-              to={`/products?category=${category.slug}`}
+              to={`/category/${category.slug}`}
               className="category-card group"
             >
               <div className="relative h-64 overflow-hidden rounded-lg">
