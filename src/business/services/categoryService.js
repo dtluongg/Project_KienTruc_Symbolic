@@ -14,11 +14,14 @@ export class CategoryService {
       throw new Error(`Lỗi khi lấy danh sách danh mục: ${error.message}`);
     }
   }
-  
+
   async getAllCategoriesWithProductCount() {
     try {
-      const categories = await this.repository.getAllWithProductCount();
-      return categories.map(category => new CategoryModel(category));
+      const categories = await this.repository.getAllCategoriesWithProductCount();
+      return categories.map(category => ({
+        ...new CategoryModel(category).toJSON(),
+        product_count: category.product_count
+      }));
     } catch (error) {
       throw new Error(`Lỗi khi lấy danh sách danh mục với số lượng sản phẩm: ${error.message}`);
     }

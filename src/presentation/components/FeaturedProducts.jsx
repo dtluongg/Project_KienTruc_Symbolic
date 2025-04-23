@@ -4,11 +4,14 @@ import { FiShoppingCart } from 'react-icons/fi';
 import { ProductService } from '../../business/services/productService';
 import { ProductRepository } from '../../data/repositories/productRepository';
 import { formatPrice } from '../../shared/utils/format';
+import { CategoryService } from '../../business/services/categoryService';
+import { CategoryRepository } from '../../data/repositories/categoryRepository';
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [categories, setCategories] = useState({});
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -16,6 +19,17 @@ const FeaturedProducts = () => {
         setLoading(true);
         const productRepository = new ProductRepository();
         const productService = new ProductService(productRepository);
+        const categoryRepository = new CategoryRepository();
+        const categoryService = new CategoryService(categoryRepository);
+        
+        // Lấy tất cả danh mục và tạo map để truy xuất nhanh
+        const allCategories = await categoryService.getAllCategories();
+        const categoryMap = {};
+        allCategories.forEach(category => {
+          categoryMap[category.category_id] = category;
+        });
+        setCategories(categoryMap);
+        
         const products = await productService.getAllProducts();
 
         // Bổ sung thêm chi tiết cho mỗi sản phẩm
@@ -23,12 +37,15 @@ const FeaturedProducts = () => {
           products.slice(0, 8).map(async (product) => {
             try {
               const details = await productService.getProductDetails(product.product_id);
+              // Lấy thông tin danh mục từ categoryMap
+              const category = categoryMap[product.category_id] || null;
+              
               return {
                 ...product,
                 colors: details.colors || [],
                 sizes: details.sizes || [],
                 images: details.images || [],
-                category: details.category
+                category: category
               };
             } catch (err) {
               console.error(`Lỗi khi lấy chi tiết sản phẩm ${product.product_id}:`, err);
@@ -36,7 +53,8 @@ const FeaturedProducts = () => {
                 ...product,
                 colors: [],
                 sizes: [],
-                images: []
+                images: [],
+                category: categoryMap[product.category_id] || null
               };
             }
           })

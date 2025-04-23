@@ -14,9 +14,12 @@ const Categories = () => {
         setLoading(true);
         const categoryRepository = new CategoryRepository();
         const categoryService = new CategoryService(categoryRepository);
-        const categories = await categoryService.getAllCategoriesWithProductCount();
-        console.log('Danh mục với số lượng sản phẩm:', categories);
-        setCategories(categories);
+        
+        // Lấy danh mục với số lượng sản phẩm
+        const categoriesWithCounts = await categoryService.getAllCategoriesWithProductCount();
+        
+        console.log('Danh mục với số lượng sản phẩm:', categoriesWithCounts);
+        setCategories(categoriesWithCounts);
         setError(null);
       } catch (err) {
         console.error('Lỗi khi lấy danh mục:', err);

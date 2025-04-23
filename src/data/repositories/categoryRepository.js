@@ -10,24 +10,6 @@ export class CategoryRepository {
     return data;
   }
 
-  async getAllWithProductCount() {
-    // Lấy danh mục và đếm số sản phẩm trong mỗi danh mục
-    const { data, error } = await supabase
-      .from('categories')
-      .select(`
-        *,
-        products:products(count)
-      `);
-
-    if (error) throw error;
-
-    // Chuyển đổi dữ liệu để thêm số lượng sản phẩm vào mỗi danh mục
-    return data.map(category => ({
-      ...category,
-      product_count: category.products[0]?.count || 0
-    }));
-  }
-
   async getById(id) {
     const { data, error } = await supabase
       .from('categories')
@@ -81,5 +63,38 @@ export class CategoryRepository {
 
     if (error) throw error;
     return data;
+  }
+
+  async getProductCountByCategory(categoryId) {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', categoryId)
+      .eq('is_active', true);
+
+    if (error) throw error;
+    return count || 0;
+  }
+
+  async getAllCategoriesWithProductCount() {
+    // Lấy tất cả các danh mục
+    const { data: categories, error: categoriesError } = await supabase
+      .from('categories')
+      .select('*');
+
+    if (categoriesError) throw categoriesError;
+
+    // Lấy số lượng sản phẩm cho từng danh mục
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (category) => {
+        const count = await this.getProductCountByCategory(category.category_id);
+        return {
+          ...category,
+          product_count: count
+        };
+      })
+    );
+
+    return categoriesWithCount;
   }
 } 
