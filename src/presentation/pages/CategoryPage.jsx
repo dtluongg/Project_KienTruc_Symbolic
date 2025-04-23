@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../infrastructure/config/supabase';
-import { formatCurrency } from '../../shared/utils/format';
+import { formatCurrency } from '../../infrastructure/utils/format';
 import { FiShoppingCart } from 'react-icons/fi';
 
 const CategoryPage = () => {

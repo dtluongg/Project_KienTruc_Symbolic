@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ProductService } from '../../business/services/productService';
 import { ProductRepository } from '../../data/repositories/productRepository';
-import { formatPrice } from '../../shared/utils/format';
+import { formatPrice } from '../../infrastructure/utils/format';
 import { FiShoppingCart, FiMinus, FiPlus } from 'react-icons/fi';
 
 const ProductDetailPage = () => {

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiShoppingCart } from 'react-icons/fi';
 import { ProductService } from '../../business/services/productService';
 import { ProductRepository } from '../../data/repositories/productRepository';
-import { formatPrice } from '../../shared/utils/format';
+import { formatPrice } from '../../infrastructure/utils/format';
 import { CategoryService } from '../../business/services/categoryService';
 import { CategoryRepository } from '../../data/repositories/categoryRepository';
 
