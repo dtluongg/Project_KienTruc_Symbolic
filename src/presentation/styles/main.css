@@ -116,6 +116,23 @@
   .social-icon {
     @apply text-gray-400 hover:text-indigo-400 transition-colors;
   }
+
+  /* Navbar links */
+  .nav-link {
+    @apply text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200;
+  }
+
+  .nav-button {
+    @apply flex items-center px-4 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md text-sm font-medium transition-colors duration-200;
+  }
+
+  .nav-icon-link {
+    @apply text-gray-300 hover:text-white p-2 rounded-md hover:bg-[#242731] ml-2 transition-colors duration-200;
+  }
+
+  .mobile-nav-link {
+    @apply text-gray-300 hover:text-white py-2 transition-colors duration-200;
+  }
 }
 
 /* General styles */
@@ -205,4 +222,22 @@ body {
   .hero-content h1 {
     font-size: 2rem;
   }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#191b24];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[#353945] rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#4b505f];
 } 

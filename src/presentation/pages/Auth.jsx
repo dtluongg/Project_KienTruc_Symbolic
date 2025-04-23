@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { supabase } from '../../infrastructure/config/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,7 +10,9 @@ const Auth = () => {
     fullName: ''
   });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, register } = useUser();
 
   const handleChange = (e) => {
     setFormData({
@@ -22,32 +24,29 @@ const Auth = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
     try {
       if (isLogin) {
         // Đăng nhập
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-        if (error) throw error;
+        const result = await login(formData.email, formData.password);
+        if (!result.success) throw new Error(result.error);
         navigate('/');
       } else {
         // Đăng ký
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.fullName,
-            }
-          }
-        });
-        if (error) throw error;
+        const result = await register(
+          formData.email, 
+          formData.password,
+          { full_name: formData.fullName }
+        );
+        
+        if (!result.success) throw new Error(result.error);
         alert('Vui lòng kiểm tra email để xác nhận đăng ký!');
       }
     } catch (error) {
       setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,9 +114,10 @@ const Auth = () => {
 
             <button
               type="submit"
-              className="w-full bg-indigo-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-600 transition-colors duration-200"
+              disabled={loading}
+              className="w-full bg-indigo-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-600 transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLogin ? 'Đăng nhập' : 'Đăng ký'}
+              {loading ? 'Đang xử lý...' : isLogin ? 'Đăng nhập' : 'Đăng ký'}
             </button>
           </form>
 
