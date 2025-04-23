@@ -1,4 +1,4 @@
-import { BannerModel } from '../../data/models/BannerModel';
+import { BannerModel } from '../models/BannerModel';
 
 export class BannerService {
   constructor(repository) {

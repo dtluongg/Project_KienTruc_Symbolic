@@ -1,4 +1,4 @@
-import { CategoryModel } from '../../data/models/CategoryModel';
+import { CategoryModel } from '../models/CategoryModel';
 import { validateCategory } from '../validators/categoryValidator';
 
 export class CategoryService {

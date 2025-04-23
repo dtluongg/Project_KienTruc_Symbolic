@@ -1,8 +1,8 @@
-import { ProductModel } from '../../data/models/ProductModel';
-import { ProductColorModel } from '../../data/models/ProductColorModel';
-import { ProductSizeModel } from '../../data/models/ProductSizeModel';
-import { ProductInventoryModel } from '../../data/models/ProductInventoryModel';
-import { ProductImageModel } from '../../data/models/ProductImageModel';
+import { ProductModel } from '../models/ProductModel';
+import { ProductColorModel } from '../models/ProductColorModel';
+import { ProductSizeModel } from '../models/ProductSizeModel';
+import { ProductInventoryModel } from '../models/ProductInventoryModel';
+import { ProductImageModel } from '../models/ProductImageModel';
 import { validateProduct } from '../validators/productValidator';
 
 export class ProductService {
