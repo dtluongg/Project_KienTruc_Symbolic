@@ -1,39 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../config/supabase';
-import { formatCurrency } from '../utils/format';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../infrastructure/config/supabase';
+import { formatCurrency } from '../../shared/utils/format';
 import { FiShoppingCart } from 'react-icons/fi';
 
-const CategoryPage = () => {
-  const { slug } = useParams();
-  const categorySlug = slug;
-  
+const AllProductsPage = () => {
   const [products, setProducts] = useState([]);
-  const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchCategoryAndProducts = async () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
-        console.log('Category slug:', categorySlug);
 
-        // Lấy thông tin danh mục
-        const { data: categoryData, error: categoryError } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('slug', categorySlug)
-          .single();
-
-        if (categoryError) {
-          console.error('Lỗi khi lấy danh mục:', categoryError);
-          throw categoryError;
-        }
-        console.log('Category data:', categoryData);
-        setCategory(categoryData);
-
-        // Lấy danh sách sản phẩm của danh mục
+        // Lấy danh sách sản phẩm
         const { data: productsData, error: productsError } = await supabase
           .from('products')
           .select(`
@@ -44,21 +25,9 @@ const CategoryPage = () => {
               slug
             )
           `)
-          .eq('category_id', categoryData.category_id)
           .eq('is_active', true);
 
-        if (productsError) {
-          console.error('Lỗi khi lấy sản phẩm:', productsError);
-          throw productsError;
-        }
-        console.log('Products data:', productsData);
-
-        if (!productsData || productsData.length === 0) {
-          console.log('Không tìm thấy sản phẩm nào trong danh mục');
-          setProducts([]);
-          setLoading(false);
-          return;
-        }
+        if (productsError) throw productsError;
 
         // Lấy màu sắc của tất cả sản phẩm
         const { data: colorsData, error: colorsError } = await supabase
@@ -67,7 +36,6 @@ const CategoryPage = () => {
           .in('product_id', productsData.map(p => p.product_id));
 
         if (colorsError) throw colorsError;
-        console.log('Colors data:', colorsData);
 
         // Lấy kích thước của tất cả sản phẩm
         const { data: sizesData, error: sizesError } = await supabase
@@ -76,7 +44,6 @@ const CategoryPage = () => {
           .in('product_id', productsData.map(p => p.product_id));
 
         if (sizesError) throw sizesError;
-        console.log('Sizes data:', sizesData);
 
         // Lấy tồn kho
         const { data: inventoryData, error: inventoryError } = await supabase
@@ -85,7 +52,6 @@ const CategoryPage = () => {
           .in('color_id', colorsData.map(c => c.color_id));
 
         if (inventoryError) throw inventoryError;
-        console.log('Inventory data:', inventoryData);
 
         // Lấy ảnh của tất cả sản phẩm
         const { data: imagesData, error: imagesError } = await supabase
@@ -94,7 +60,6 @@ const CategoryPage = () => {
           .in('color_id', colorsData.map(c => c.color_id));
 
         if (imagesError) throw imagesError;
-        console.log('Images data:', imagesData);
 
         // Xử lý dữ liệu sản phẩm
         const processedProducts = productsData.map(product => {
@@ -106,7 +71,7 @@ const CategoryPage = () => {
           const productSizes = sizesData.filter(s => s.product_id === product.product_id);
           const firstSize = productSizes[0];
           const basePrice = product.base_price;
-          const priceAdjust = firstSize?.price_adjustment || 0;
+          const priceAdjust = firstSize?.price_adjust || 0;
           const finalPrice = basePrice + priceAdjust;
 
           return {
@@ -116,7 +81,6 @@ const CategoryPage = () => {
           };
         });
 
-        console.log('Processed products:', processedProducts);
         setProducts(processedProducts);
         setError(null);
       } catch (err) {
@@ -128,10 +92,8 @@ const CategoryPage = () => {
       }
     };
 
-    if (categorySlug) {
-      fetchCategoryAndProducts();
-    }
-  }, [categorySlug]);
+    fetchProducts();
+  }, []);
 
   if (loading) return (
     <div className="min-h-screen pt-20 pb-12 px-4">
@@ -157,23 +119,13 @@ const CategoryPage = () => {
     </div>
   );
 
-  if (!category) return (
-    <div className="min-h-screen pt-20 pb-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Không tìm thấy danh mục</h2>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen pt-20 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold mb-4">{category.category_name}</h1>
+          <h1 className="text-3xl font-bold mb-4">Tất cả sản phẩm</h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            {category.description || `Khám phá các sản phẩm ${category.category_name} của chúng tôi`}
+            Khám phá bộ sưu tập đa dạng các sản phẩm của chúng tôi
           </p>
         </div>
 
@@ -195,17 +147,19 @@ const CategoryPage = () => {
                   <h3 className="product-title">{product.product_name}</h3>
                 </Link>
                 <p className="product-category">
-                  {category.category_name}
+                  {product.categories.category_name}
                 </p>
                 <div className="flex justify-between items-center mt-4">
-                  <span className="product-price">
-                    {formatCurrency(product.finalPrice)}
-                  </span>
-                  {product.compare_at_price > product.base_price && (
-                    <span className="product-price-old">
-                      {formatCurrency(product.compare_at_price)}
+                  <div className="flex items-center gap-2">
+                    <span className="product-price">
+                      {formatCurrency(product.finalPrice)}
                     </span>
-                  )}
+                    {product.compare_at_price > product.finalPrice && (
+                      <span className="product-price-old">
+                        {formatCurrency(product.compare_at_price)}
+                      </span>
+                    )}
+                  </div>
                   <button 
                     className="w-10 h-10 flex items-center justify-center bg-indigo-500 text-white rounded-full hover:bg-indigo-600 transition-colors"
                     title="Thêm vào giỏ hàng"
@@ -222,4 +176,4 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage; 
+export default AllProductsPage; 

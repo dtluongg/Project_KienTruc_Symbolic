@@ -1,6 +1,6 @@
-import Hero from '../components/Hero';
 import Categories from '../components/Categories';
 import FeaturedProducts from '../components/FeaturedProducts';
+import Hero from '../components/Hero';
 import { FiTruck, FiRefreshCw, FiHeadphones, FiCreditCard } from 'react-icons/fi';
 import ChatBotGeminiAI from '../components/ChatBotGeminiAI/ChatBotGeminiAI';
 

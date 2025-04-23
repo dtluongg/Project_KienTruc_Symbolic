@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../config/supabase';
+import { supabase } from '../../infrastructure/config/supabase';
+import { CategoryModel } from '../../data/models/CategoryModel';
 
 export const useCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -27,10 +28,13 @@ export const useCategories = () => {
         console.log('Categories:', categoriesData);
 
         // Xử lý dữ liệu
-        const processedCategories = categoriesData.map(category => ({
-          ...category,
-          count: category.products?.length || 0
-        }));
+        const processedCategories = categoriesData.map(category => {
+          const categoryModel = new CategoryModel(category);
+          return {
+            ...categoryModel.toJSON(),
+            count: category.products?.length || 0
+          };
+        });
 
         console.log('Processed Categories:', processedCategories);
         setCategories(processedCategories);

@@ -116,7 +116,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-gray-800 mt-12 pt-8">
           <p className="text-center text-gray-400 text-sm">
-            © 2024 Symbolic. Tất cả quyền được bảo lưu.
+            © {new Date().getFullYear()} Symbolic. Tất cả quyền được bảo lưu.
           </p>
         </div>
       </div>

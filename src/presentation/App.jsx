@@ -5,7 +5,7 @@ import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import AllProductsPage from './pages/AllProductsPage';
-import TestProduct from './test/TestProduct';
+import TestProduct from '../test/TestProduct';
 import Auth from './pages/Auth';
 
 // Import custom CSS
@@ -19,7 +19,7 @@ function App() {
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/category" element={<CategoryPage />} />
+            <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/products" element={<AllProductsPage />} />
             <Route path="/test" element={<TestProduct />} />

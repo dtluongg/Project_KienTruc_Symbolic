@@ -1,10 +1,17 @@
-import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiUser, FiMessageCircle } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiShoppingCart, FiUser, FiMessageCircle, FiSearch } from 'react-icons/fi';
+import { CategoryService } from '../../business/services/categoryService';
+import { CategoryRepository } from '../../data/repositories/categoryRepository';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
   const logoUrl = "https://xiocmtlosfcsrydhgjvl.supabase.co/storage/v1/object/public/symbolicv3/symbolic%20logo.png";
 
   useEffect(() => {
@@ -18,6 +25,34 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [scrolled]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const categoryRepository = new CategoryRepository();
+        const categoryService = new CategoryService(categoryRepository);
+        const categories = await categoryService.getAllCategories();
+        setCategories(categories);
+        setError(null);
+      } catch (err) {
+        console.error('Lỗi khi lấy danh mục:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
 
   return (
     <nav className="fixed w-full z-[9999] top-0 px-4 py-2 bg-transparent">
@@ -50,13 +85,21 @@ const Navbar = () => {
 
           {/* Search and Icons */}
           <div className="hidden md:flex items-center space-x-2">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 placeholder="Tìm kiếm..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-64 bg-[#93909f]/50 text-[#0a0a0a] px-4 py-1.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#858291] border border-[#93909f] placeholder-[#4d4d4d]"
               />
-            </div>
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0a0a0a]"
+              >
+                <FiSearch className="h-4 w-4" />
+              </button>
+            </form>
             <button 
               className="text-[#0a0a0a] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50"
               onClick={() => window.Tawk_API?.toggle()}
@@ -100,6 +143,22 @@ const Navbar = () => {
               <Link to="/contact" className="text-[#0a0a0a] hover:text-black block px-3 py-2 text-base font-medium rounded-full hover:bg-[#93909f]/50">
                 Liên hệ
               </Link>
+              
+              {!loading && !error && categories.length > 0 && (
+                <>
+                  <div className="border-t border-[#93909f]/50 my-2"></div>
+                  <p className="px-3 py-1 text-sm font-medium text-[#0a0a0a]">Danh mục:</p>
+                  {categories.map((category) => (
+                    <Link
+                      key={category.category_id}
+                      to={`/products?category=${category.slug}`}
+                      className="text-[#0a0a0a] hover:text-black block px-3 py-2 text-base font-medium rounded-full hover:bg-[#93909f]/50"
+                    >
+                      {category.category_name}
+                    </Link>
+                  ))}
+                </>
+              )}
             </div>
             <div className="px-4 py-3 border-t border-[#93909f]">
               <div className="flex items-center space-x-2">
@@ -117,11 +176,21 @@ const Navbar = () => {
                 </Link>
               </div>
               <div className="mt-3">
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm..."
-                  className="w-full bg-[#93909f]/50 text-[#0a0a0a] px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#858291] border border-[#93909f] placeholder-[#4d4d4d]"
-                />
+                <form onSubmit={handleSearch} className="relative">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-[#93909f]/50 text-[#0a0a0a] px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#858291] border border-[#93909f] placeholder-[#4d4d4d]"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0a0a0a]"
+                  >
+                    <FiSearch className="h-4 w-4" />
+                  </button>
+                </form>
               </div>
             </div>
           </div>

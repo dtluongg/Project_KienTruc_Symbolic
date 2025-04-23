@@ -1,8 +1,33 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useCategories } from '../hooks/useCategories';
+import { CategoryService } from '../../business/services/categoryService';
+import { CategoryRepository } from '../../data/repositories/categoryRepository';
 
 const Categories = () => {
-  const { categories, loading, error } = useCategories();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const categoryRepository = new CategoryRepository();
+        const categoryService = new CategoryService(categoryRepository);
+        const categories = await categoryService.getAllCategoriesWithProductCount();
+        console.log('Danh mục với số lượng sản phẩm:', categories);
+        setCategories(categories);
+        setError(null);
+      } catch (err) {
+        console.error('Lỗi khi lấy danh mục:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   if (loading) return (
     <section className="py-16">
@@ -66,7 +91,7 @@ const Categories = () => {
                     {category.category_name}
                   </h3>
                   <p className="text-gray-200">
-                    {category.count} sản phẩm
+                    {category.product_count} sản phẩm
                   </p>
                 </div>
               </div>
