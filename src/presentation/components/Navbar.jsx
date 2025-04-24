@@ -27,8 +27,9 @@ const Navbar = () => {
   // Xử lý tìm kiếm
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Tìm kiếm:', searchQuery);
-    // TODO: Chuyển hướng đến trang kết quả tìm kiếm
+    if (searchQuery.trim()) {
+      navigate(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   // Xử lý đăng xuất
