@@ -41,6 +41,7 @@
     transform-origin: bottom right;
     transition: all 0.1s ease;
     box-shadow: 0 0 128px 0 rgba(0, 0, 0, 0.1), 0 32px 64px -48px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
 }
 .container.show_chatbot .chatbot_popup{
     transform: scale(1);
@@ -120,6 +121,7 @@
 .chat_body .message .message_text{
     padding: 12px 16px;
     max-width: 75%;   
+    color: #000;
     /* background: #6D4FC2; */
 }
 .chat_body .bot_message .message_text{
@@ -141,8 +143,8 @@
     position: absolute;
     bottom: 0;
     width: 100%;
-    background: #fff;
-    padding: 15px 22px 20px;
+    background: #6D4FC2 !important ;
+    padding: 15px 22px 20px !important;
 }
 
 .footer .chat_form {

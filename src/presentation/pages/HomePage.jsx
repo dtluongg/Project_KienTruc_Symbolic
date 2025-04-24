@@ -2,7 +2,6 @@ import Categories from '../components/Categories';
 import FeaturedProducts from '../components/FeaturedProducts';
 import Hero from '../components/Hero';
 import { FiTruck, FiRefreshCw, FiHeadphones, FiCreditCard } from 'react-icons/fi';
-import ChatBotGeminiAI from '../components/ChatBotGeminiAI/ChatBotGeminiAI';
 
 const features = [
   {
@@ -33,7 +32,6 @@ const HomePage = () => {
       <Hero />
       <Categories />
       <FeaturedProducts />
-      <ChatBotGeminiAI />
       
       <section className="py-16 bg-[#242731]">
         <div className="container mx-auto px-4">
