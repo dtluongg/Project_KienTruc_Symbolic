@@ -12,7 +12,7 @@ import AllProductsPage from './presentation/pages/AllProductsPage';
 import TestProduct from './test/TestProduct';
 import Auth from './presentation/pages/Auth';
 import UserProfile from './presentation/pages/UserProfile';
-
+import ChatBotGeminiAI from './presentation/components/ChatBotGeminiAI/ChatBotGeminiAI';
 // Import custom CSS
 import './presentation/styles/main.css';
 
@@ -41,6 +41,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-[#0f111a] text-white">
       <Navbar />
+      <ChatBotGeminiAI />
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
