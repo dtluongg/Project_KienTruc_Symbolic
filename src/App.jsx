@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { UserProvider, useUser } from './presentation/context/UserContext';
+import { SearchProvider } from './presentation/context/SearchContext';
 
 // Import components
 import Navbar from './presentation/components/Navbar';
@@ -13,6 +14,7 @@ import TestProduct from './test/TestProduct';
 import Auth from './presentation/pages/Auth';
 import UserProfile from './presentation/pages/UserProfile';
 import ChatBotGeminiAI from './presentation/components/ChatBotGeminiAI/ChatBotGeminiAI';
+
 // Import custom CSS
 import './presentation/styles/main.css';
 
@@ -68,11 +70,13 @@ function App() {
 // Wrapper component để sử dụng UserProvider
 const AppWrapper = () => {
   return (
-    <Router>
+    <BrowserRouter>
       <UserProvider>
-        <App />
+        <SearchProvider>
+          <App />
+        </SearchProvider>
       </UserProvider>
-    </Router>
+    </BrowserRouter>
   );
 };
 

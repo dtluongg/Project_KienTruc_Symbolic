@@ -1,14 +1,33 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ChatbotIcon from "./ChatbotIcon";
 import ChatForm from "./ChatForm";
 import ChatMessage from "./ChatMessage";
+import { useSearch } from "../../context/SearchContext";
 import "./ChatBotGeminiAI.css";
-
 
 const ChatBotGeminiAI = () => {
     const [chatHistory, setChatHistory] = useState([]);
     const [showChatbot, setShowChatbot] = useState(false);
     const chatBodyRef = useRef();
+    const navigate = useNavigate();
+    const { updateSearchQuery } = useSearch();
+
+    const extractProductKeywords = (text) => {
+        // Danh sách các từ khóa sản phẩm cần tìm
+        const productKeywords = [
+            "Hoodie", "Jacket", "T-shirt", "Shirt", "Pants", "Jeans", "Sweater",
+            "áo hoodie", "áo khoác", "áo thun", "quần", "quần jean", "áo len"
+        ];
+        
+        // Tìm từ khóa đầu tiên xuất hiện trong text
+        const foundKeyword = productKeywords.find(keyword => 
+            text.toLowerCase().includes(keyword.toLowerCase())
+        );
+        
+        return foundKeyword;
+    };
+
     const genarateBotResponse = async (history) => {
         console.log(history);
         history = history.map(({ role, text }) => ({ role, parts: [{ text }] }));
@@ -16,8 +35,14 @@ const ChatBotGeminiAI = () => {
         //Update history:
         const updateHistory = (text) => {
             setChatHistory(prev => [...prev.filter(msg => msg.text !== "Thinking..."), { role: "model", text: text }]);
+            
+            // Phân tích câu trả lời để tìm từ khóa sản phẩm
+            const productKeyword = extractProductKeywords(text);
+            if (productKeyword) {
+                updateSearchQuery(productKeyword);
+                navigate(`/products?q=${encodeURIComponent(productKeyword)}`);
+            }
         }
-
 
         const requestOptions = {
             method: "POST",
@@ -71,7 +96,7 @@ const ChatBotGeminiAI = () => {
                     <div className="message bot_message">
                         <ChatbotIcon />
                         <p className="message_text">
-                            Hey there <br /> How can I help you today?
+                            Xin chào ^-^ <br /> Hãy đặt câu hỏi để tôi tư vấn giúp bạn nhé... 
                         </p>
                     </div>
                     {/* Tu dong render chat:  */}
@@ -83,11 +108,10 @@ const ChatBotGeminiAI = () => {
                 {/* footer */}
                 <div className="footer">
                     <ChatForm chatHistory={chatHistory} setChatHistory={setChatHistory} genarateBotResponse={genarateBotResponse} />
-
                 </div>
             </div>
         </div>
     );
 }
 
-export default ChatBotGeminiAI
+export default ChatBotGeminiAI;
