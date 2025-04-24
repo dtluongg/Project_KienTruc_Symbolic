@@ -25,11 +25,12 @@ const ChatForm = ({chatHistory, setChatHistory, genarateBotResponse}) => {
   return (
     <form action="#" className="chat_form" onSubmit={handleFormSubmit}>
       <input
-      ref={inputRef}
+        ref={inputRef}
         type="text"
-        placeholder="Message...."
+        placeholder="Nhập câu hỏi của bạn...."
         className="message_input"
         required
+        style={{color: "black"}}
       />
       <button className="material-symbols-rounded">arrow_upward</button>
     </form>
