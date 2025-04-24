@@ -16,7 +16,7 @@ const ChatBotGeminiAI = () => {
     const extractProductKeywords = (text) => {
         // Danh sách các từ khóa sản phẩm cần tìm
         const productKeywords = [
-            "Hoodie", "Jacket", "T-shirt", "Shirt", "Pants", "Jeans", "Sweater",
+            "Hoodie", "Signature", "Cardigan", "Shirt", "Tee", "Varsity", "Jacket",
             "áo hoodie", "áo khoác", "áo thun", "quần", "quần jean", "áo len"
         ];
         
@@ -84,7 +84,7 @@ const ChatBotGeminiAI = () => {
                 <div className="chat_header">
                     <div className="header_info">
                         <ChatbotIcon />
-                        <h2 className="logo_text">Chat bot</h2>
+                        <h2 className="logo_text">Trợ lý tư vấn bằng AI</h2>
                     </div>
                     <button onClick={() => setShowChatbot(prev => !prev)} className="material-symbols-rounded">
                         keyboard_arrow_down
