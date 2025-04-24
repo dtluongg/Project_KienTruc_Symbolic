@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '../../infrastructure/config/supabase';
 import { formatCurrency } from '../../infrastructure/utils/format';
 import { FiShoppingCart } from 'react-icons/fi';
@@ -8,14 +8,17 @@ const AllProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get('q') || '';
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
 
-        // Lấy danh sách sản phẩm
-        const { data: productsData, error: productsError } = await supabase
+        // Xây dựng query cơ bản
+        let query = supabase
           .from('products')
           .select(`
             *,
@@ -26,6 +29,13 @@ const AllProductsPage = () => {
             )
           `)
           .eq('is_active', true);
+
+        // Thêm điều kiện tìm kiếm nếu có searchQuery
+        if (searchQuery) {
+          query = query.ilike('product_name', `%${searchQuery}%`);
+        }
+
+        const { data: productsData, error: productsError } = await query;
 
         if (productsError) throw productsError;
 
@@ -93,7 +103,7 @@ const AllProductsPage = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [searchQuery]);
 
   if (loading) return (
     <div className="min-h-screen pt-20 pb-12 px-4">
