@@ -84,7 +84,7 @@ const ChatBotGeminiAI = () => {
                 <div className="chat_header">
                     <div className="header_info">
                         <ChatbotIcon />
-                        <h2 className="logo_text">Trợ lý tư vấn bằng AI</h2>
+                        <h2 className="logo_text">Trợ lý tư vấn băng AI</h2>
                     </div>
                     <button onClick={() => setShowChatbot(prev => !prev)} className="material-symbols-rounded">
                         keyboard_arrow_down
