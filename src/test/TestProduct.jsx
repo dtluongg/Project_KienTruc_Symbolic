@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../config/supabase';
+import { supabase } from '../infrastructure/config/supabase';
 
 const TestProduct = () => {
   const [data, setData] = useState(null);
