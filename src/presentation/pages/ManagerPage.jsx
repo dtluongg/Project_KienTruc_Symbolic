@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../infrastructure/config/supabase';
 import { FiUsers, FiShoppingBag, FiDollarSign, FiBarChart2, FiAlertCircle } from 'react-icons/fi';
+import StatsService from '../../business/services/StatsService';
 import '../styles/managerPage.css';
 
 
@@ -15,6 +16,7 @@ const ManagerPage = () => {
     totalRevenue: 0
   });
   const navigate = useNavigate();
+  const statsService = new StatsService();
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -47,33 +49,8 @@ const ManagerPage = () => {
       if (userRole !== 'manager') return;
 
       try {
-        // Fetch all users
-        const { data: users } = await supabase
-          .from('profiles')
-          .select('*');
-
-        console.log('All users:', users);
-        const totalUsers = users?.length || 0;
-
-        // Fetch total products
-        const { count: totalProducts } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true });
-
-        // Fetch total orders and revenue
-        const { data: orders } = await supabase
-          .from('orders')
-          .select('total_amount');
-
-        const totalOrders = orders?.length || 0;
-        const totalRevenue = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
-
-        setStats({
-          totalUsers,
-          totalProducts,
-          totalOrders,
-          totalRevenue
-        });
+        const dashboardStats = await statsService.getDashboardStats();
+        setStats(dashboardStats);
       } catch (error) {
         console.error('Error fetching stats:', error);
       }
