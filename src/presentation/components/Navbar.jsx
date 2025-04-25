@@ -67,6 +67,9 @@ const Navbar = () => {
             <Link to="/contact" className="text-[#0a0a0a] hover:text-black px-4 py-2 text-sm font-medium rounded-full hover:bg-[#93909f]/50">
               Liên hệ
             </Link>
+            <Link to="/manager" className="text-[#0a0a0a] hover:text-black px-4 py-2 text-sm font-medium rounded-full hover:bg-[#93909f]/50">
+              Quản lý
+            </Link>
           </div>
 
           {/* Tìm kiếm, giỏ hàng và tài khoản */}

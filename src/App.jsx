@@ -14,6 +14,7 @@ import TestProduct from './test/TestProduct';
 import Auth from './presentation/pages/Auth';
 import UserProfile from './presentation/pages/UserProfile';
 import ChatBotGeminiAI from './presentation/components/ChatBotGeminiAI/ChatBotGeminiAI';
+import ManagerPage from './presentation/pages/ManagerPage';
 
 // Import custom CSS
 import './presentation/styles/main.css';
@@ -60,6 +61,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path="/manager" element={<ManagerPage />} />
         </Routes>
       </main>
       <Footer />
