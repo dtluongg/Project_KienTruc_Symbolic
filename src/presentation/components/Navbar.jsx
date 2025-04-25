@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiShoppingCart, FiMenu, FiX, FiUser, FiSearch, FiMessageCircle } from 'react-icons/fi';
 import { useUser } from '../context/UserContext';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, loading, logout } = useUser();
+  const { totalItems } = useCart();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const logoUrl = "https://xiocmtlosfcsrydhgjvl.supabase.co/storage/v1/object/public/symbolicv3/symbolic%20logo.png";
@@ -99,7 +101,11 @@ const Navbar = () => {
             {/* Giỏ hàng */}
             <Link to="/cart" className="text-[#0a0a0a] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50 relative">
               <FiShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-indigo-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">0</span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-indigo-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                  {totalItems > 9 ? '9+' : totalItems}
+                </span>
+              )}
             </Link>
 
             {/* Tài khoản */}
@@ -176,8 +182,13 @@ const Navbar = () => {
                 >
                   <FiMessageCircle className="h-5 w-5" />
                 </button>
-                <Link to="/cart" className="text-[#0a0a0a] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50">
+                <Link to="/cart" className="text-[#0a0a0a] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50 relative">
                   <FiShoppingCart className="h-5 w-5" />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-indigo-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                      {totalItems > 9 ? '9+' : totalItems}
+                    </span>
+                  )}
                 </Link>
                 {user ? (
                   <Link to="/profile" className="text-[#0a0a0a] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50">
