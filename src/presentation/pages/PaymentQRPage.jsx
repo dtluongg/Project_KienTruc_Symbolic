@@ -69,17 +69,30 @@ const PaymentQRPage = () => {
                     latestTransaction["Giá trị"] === order.total_amount &&
                     latestTransaction["Mô tả"].includes(`DH${orderId}`)) {
                     
-                    // Cập nhật trạng thái đơn hàng
-                    const { error } = await supabase
-                        .from('orders')
-                        .update({ status: 'Completed' })
-                        .eq('order_id', orderId);
-                        
-                    if (!error) {
-                        // Chuyển đến trang xác nhận
-                        navigate(`/order-confirmation/${orderId}`, {
-                            state: { order: { ...order, status: 'Completed' } }
-                        });
+                    // Lấy thông tin payment
+                    const { data: payment, error: paymentError } = await supabase
+                        .from('payments')
+                        .select('payment_id')
+                        .eq('order_id', orderId)
+                        .single();
+
+                    if (!paymentError && payment) {
+                        // Cập nhật trạng thái payment thành Completed
+                        const { error: updateError } = await supabase
+                            .from('payments')
+                            .update({ 
+                                status: 'Completed',
+                                transaction_id: latestTransaction["Mã GD"].toString(),
+                                payment_date: new Date().toISOString()
+                            })
+                            .eq('payment_id', payment.payment_id);
+
+                        if (!updateError) {
+                            // Chuyển đến trang xác nhận, order vẫn giữ trạng thái Pending
+                            navigate(`/order-confirmation/${orderId}`, {
+                                state: { order: { ...order } }
+                            });
+                        }
                     }
                 }
             }
@@ -139,13 +152,6 @@ const PaymentQRPage = () => {
         return url;
     };
 
-    const handlePaymentConfirm = () => {
-        // Chuyển đến trang xác nhận đơn hàng
-        navigate(`/order-confirmation/${orderId}`, {
-            state: { order: order }
-        });
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0f111a]">
@@ -191,7 +197,7 @@ const PaymentQRPage = () => {
                         <p className="text-sm text-gray-300">Nội dung: <span className="text-white font-mono">DH{orderId}</span></p>
                     </div>
 
-                    <div className="bg-blue-900 bg-opacity-30 p-4 rounded-lg text-sm mb-6">
+                    <div className="bg-blue-900 bg-opacity-30 p-4 rounded-lg text-sm">
                         <p className="text-blue-300 font-medium mb-2">Lưu ý:</p>
                         <ul className="list-disc pl-5 space-y-1 text-blue-200">
                             <li>Vui lòng chuyển khoản chính xác số tiền và nội dung như trên</li>
@@ -200,13 +206,6 @@ const PaymentQRPage = () => {
                         </ul>
                     </div>
                 </div>
-                
-                <button
-                    onClick={handlePaymentConfirm}
-                    className="w-full bg-[#2d2d2d] text-white py-3 rounded-lg hover:bg-black transition duration-200"
-                >
-                    Tôi đã thanh toán
-                </button>
             </div>
         </div>
     );
