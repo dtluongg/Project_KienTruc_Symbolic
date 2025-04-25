@@ -1,8 +1,10 @@
 import { PaymentRepository } from '../../data/repositories/paymentRepository';
+import { OrderService } from './orderService';
 
 export class PaymentService {
-  constructor(repository = new PaymentRepository()) {
+  constructor(repository = new PaymentRepository(), orderService = null) {
     this.repository = repository;
+    this.orderService = orderService;
   }
 
   async createPayment(orderId, paymentMethodId, amount) {
@@ -37,6 +39,12 @@ export class PaymentService {
       };
 
       const payment = await this.repository.update(paymentId, updateData);
+
+      // Nếu thanh toán thành công và có orderService, cập nhật trạng thái đơn hàng thành Processing
+      if (status === 'Completed' && payment.order_id && this.orderService) {
+        await this.orderService.updateOrderStatus(payment.order_id, 'Processing');
+      }
+
       return payment;
     } catch (error) {
       console.error('Lỗi khi cập nhật trạng thái payment:', error);

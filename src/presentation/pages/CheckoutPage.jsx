@@ -135,7 +135,7 @@ const CheckoutPage = () => {
 
     const orderData = {
       ...formData,
-      user_id: user?.user_id,
+      user_id: user?.id,
       shipping_method_id: selectedShippingMethod.method_id,
       payment_method_id: selectedPaymentMethod.method_id,
       coupon_id: coupon ? coupon.coupon_id : null,

@@ -116,4 +116,21 @@ export class OrderRepository {
       throw error;
     }
   }
+
+  async updateOrderStatus(orderId, status) {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ status: status })
+        .eq('order_id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      throw error;
+    }
+  }
 } 

@@ -8,7 +8,7 @@ export class OrderService {
     this.orderRepository = orderRepository;
     this.couponService = new CouponService();
     this.shippingMethodService = new ShippingMethodService();
-    this.paymentService = new PaymentService();
+    this.paymentService = new PaymentService(undefined, this);
   }
 
   async createOrder(orderData, cartItems) {
@@ -123,5 +123,20 @@ export class OrderService {
 
   async getOrderDetails(orderId) {
     return await this.orderRepository.getOrderDetails(orderId);
+  }
+
+  async updateOrderStatus(orderId, status) {
+    try {
+      // Kiểm tra status hợp lệ
+      if (!['Pending', 'Processing', 'Shipped', 'Completed', 'Cancelled'].includes(status)) {
+        throw new Error('Trạng thái đơn hàng không hợp lệ');
+      }
+
+      const order = await this.orderRepository.updateOrderStatus(orderId, status);
+      return order;
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái đơn hàng:', error);
+      throw error;
+    }
   }
 } 

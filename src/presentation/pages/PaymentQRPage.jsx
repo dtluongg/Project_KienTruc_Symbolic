@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../infrastructure/config/supabase';
 import { formatPrice } from '../../infrastructure/utils/format';
+import { PaymentService } from '../../business/services/paymentService';
+import { OrderService } from '../../business/services/orderService';
 
 const PaymentQRPage = () => {
     const { orderId } = useParams();
@@ -11,33 +13,17 @@ const PaymentQRPage = () => {
     const [loading, setLoading] = useState(true);
     const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 phút tính bằng giây
     const [checkingPayment, setCheckingPayment] = useState(false);
+    const orderService = new OrderService();
+    const paymentService = new PaymentService(undefined, orderService);
 
     useEffect(() => {
         const fetchOrder = async () => {
             try {
                 console.log('Fetching order with ID:', orderId);
-                const { data, error } = await supabase
-                    .from('orders')
-                    .select(`
-                        *,
-                        shipping_methods:shipping_method_id(*),
-                        payment_methods:payment_method_id(*),
-                        order_items(
-                            *,
-                            product:product_id(*)
-                        )
-                    `)
-                    .eq('order_id', orderId)
-                    .single();
-
-                if (error) {
-                    console.error('Supabase error:', error);
-                    throw error;
-                }
-
-                console.log('Order data received:', data);
-                if (data) {
-                    setOrder(data);
+                const orderDetails = await orderService.getOrderDetails(orderId);
+                console.log('Order data received:', orderDetails);
+                if (orderDetails) {
+                    setOrder(orderDetails);
                 } else {
                     console.log('No order data found');
                 }
@@ -70,29 +56,23 @@ const PaymentQRPage = () => {
                     latestTransaction["Mô tả"].includes(`DH${orderId}`)) {
                     
                     // Lấy thông tin payment
-                    const { data: payment, error: paymentError } = await supabase
-                        .from('payments')
-                        .select('payment_id')
-                        .eq('order_id', orderId)
-                        .single();
+                    const payment = await paymentService.getPaymentByOrderId(orderId);
 
-                    if (!paymentError && payment) {
+                    if (payment) {
                         // Cập nhật trạng thái payment thành Completed
-                        const { error: updateError } = await supabase
-                            .from('payments')
-                            .update({ 
-                                status: 'Completed',
-                                transaction_id: latestTransaction["Mã GD"].toString(),
-                                payment_date: new Date().toISOString()
-                            })
-                            .eq('payment_id', payment.payment_id);
+                        await paymentService.updatePaymentStatus(
+                            payment.payment_id,
+                            'Completed',
+                            latestTransaction["Mã GD"].toString()
+                        );
 
-                        if (!updateError) {
-                            // Chuyển đến trang xác nhận, order vẫn giữ trạng thái Pending
-                            navigate(`/order-confirmation/${orderId}`, {
-                                state: { order: { ...order } }
-                            });
-                        }
+                        // Lấy thông tin đơn hàng mới nhất
+                        const updatedOrder = await orderService.getOrderDetails(orderId);
+
+                        // Chuyển đến trang xác nhận với thông tin mới nhất
+                        navigate(`/order-confirmation/${orderId}`, {
+                            state: { order: updatedOrder }
+                        });
                     }
                 }
             }
