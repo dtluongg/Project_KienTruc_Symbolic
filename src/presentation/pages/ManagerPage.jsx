@@ -47,12 +47,13 @@ const ManagerPage = () => {
       if (userRole !== 'manager') return;
 
       try {
-        // Fetch all users from profiles table
-        const { data: users, error: usersError } = await supabase
+        // Fetch all users
+        const { data: users } = await supabase
           .from('profiles')
           .select('*');
 
-        if (usersError) throw usersError;
+        console.log('All users:', users);
+        const totalUsers = users?.length || 0;
 
         // Fetch total products
         const { count: totalProducts } = await supabase
@@ -68,7 +69,7 @@ const ManagerPage = () => {
         const totalRevenue = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
 
         setStats({
-          totalUsers: users?.length || 0,
+          totalUsers,
           totalProducts,
           totalOrders,
           totalRevenue
