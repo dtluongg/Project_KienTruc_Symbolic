@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '../../infrastructure/config/supabase';
 import { formatCurrency } from '../../infrastructure/utils/format';
-import { FiShoppingCart, FiEdit2, FiTrash2, FiPlus, FiX, FiCheck } from 'react-icons/fi';
+import { FiShoppingCart, FiEdit2, FiTrash2, FiPlus, FiX, FiCheck, FiUpload } from 'react-icons/fi';
+import ProductImageService from '../../business/services/ProductImageService';
 import '../styles/productForm.css';
 
 const AllProductsPage = () => {
@@ -30,6 +31,10 @@ const AllProductsPage = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get('q') || '';
+  const productImageService = new ProductImageService();
+  const [errorMsg, setErrorMsg] = useState('');
+  const fileInputRef = useRef(null);
+  const [productImages, setProductImages] = useState([]);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -211,35 +216,28 @@ const AllProductsPage = () => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setImageFiles(files);
+
+    // Preview images
+    const previewUrls = files.map(file => URL.createObjectURL(file));
+    setFormData(prev => ({
+      ...prev,
+      previewImages: previewUrls
+    }));
   };
 
   const uploadImages = async (colorId) => {
-    const uploadedImages = [];
+    const result = await productImageService.uploadMultipleProductImages(imageFiles);
     
-    for (const file of imageFiles) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      uploadedImages.push({
-        color_id: colorId,
-        image_url: publicUrl,
-        alt_text: file.name,
-        is_primary: uploadedImages.length === 0
-      });
+    if (!result.success) {
+      throw new Error('Failed to upload some images');
     }
 
-    return uploadedImages;
+    return result.urls.map((url, index) => ({
+      color_id: colorId,
+      image_url: url,
+      alt_text: imageFiles[index].name,
+      is_primary: index === 0
+    }));
   };
 
   const showNotification = (message, type = 'success') => {
@@ -424,6 +422,58 @@ const AllProductsPage = () => {
         console.error('Lỗi khi xóa sản phẩm:', err);
         alert('Có lỗi xảy ra khi xóa sản phẩm');
       }
+    }
+  };
+
+  const handleImageClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const uploadProductImages = async (event) => {
+    try {
+      setUploading(true);
+      setErrorMsg('');
+
+      if (!event.target.files || event.target.files.length === 0) {
+        setErrorMsg('Vui lòng chọn ít nhất một hình ảnh để tải lên.');
+        return;
+      }
+
+      const files = Array.from(event.target.files);
+      const uploadedUrls = [];
+
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        // Upload file to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // Get public URL
+        const { data } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      setProductImages(uploadedUrls);
+      setFormData(prev => ({
+        ...prev,
+        images: uploadedUrls
+      }));
+    } catch (error) {
+      console.error('Lỗi khi tải lên hình ảnh:', error.message);
+      setErrorMsg('Lỗi khi tải lên hình ảnh: ' + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -689,15 +739,53 @@ const AllProductsPage = () => {
                 </button>
               </div>
 
-              <div>
-                <label>Hình ảnh</label>
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleImageChange}
-                  className="file-input"
-                  accept="image/*"
-                />
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hình ảnh sản phẩm</label>
+                <div className="flex flex-col items-center">
+                  <div className="grid grid-cols-3 gap-4 mb-4 w-full">
+                    {productImages.map((url, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={url}
+                          alt={`Product ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newImages = productImages.filter((_, i) => i !== index);
+                            setProductImages(newImages);
+                            setFormData(prev => ({
+                              ...prev,
+                              images: newImages
+                            }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <FiX size={16} />
+                        </button>
+                      </div>
+                    ))}
+                    <div
+                      onClick={handleImageClick}
+                      className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors"
+                    >
+                      <FiUpload className="w-8 h-8 text-gray-400" />
+                      <span className="mt-2 text-sm text-gray-500">Thêm ảnh</span>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    multiple
+                    onChange={uploadProductImages}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  {errorMsg && (
+                    <p className="text-red-500 text-sm mt-2">{errorMsg}</p>
+                  )}
+                </div>
               </div>
 
               <div className="form-actions">
@@ -705,6 +793,7 @@ const AllProductsPage = () => {
                   type="button"
                   onClick={() => setShowAddProductModal(false)}
                   className="cancel-btn"
+                  disabled={uploading}
                 >
                   Hủy
                 </button>
@@ -713,7 +802,7 @@ const AllProductsPage = () => {
                   disabled={uploading}
                   className="submit-btn"
                 >
-                  {uploading ? 'Đang lưu...' : 'Lưu sản phẩm'}
+                  {uploading ? 'Đang xử lý...' : 'Lưu sản phẩm'}
                 </button>
               </div>
             </form>
