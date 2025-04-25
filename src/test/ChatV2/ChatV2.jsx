@@ -27,6 +27,11 @@ const ChatBotGeminiAI = () => {
         return foundKeyword;
     };
 
+    const handleProductClick = (productKeyword) => {
+        updateSearchQuery(productKeyword);
+        navigate(`/products?q=${encodeURIComponent(productKeyword)}`);
+    };
+
     const genarateBotResponse = async (history) => {
         console.log(history);
         history = history.map(({ role, text }) => ({ role, parts: [{ text }] }));
@@ -34,13 +39,6 @@ const ChatBotGeminiAI = () => {
         //Update history:
         const updateHistory = (text) => {
             setChatHistory(prev => [...prev.filter(msg => msg.text !== "Thinking..."), { role: "model", text: text }]);
-            
-            // Phân tích câu trả lời để tìm từ khóa sản phẩm
-            const productKeyword = extractProductKeywords(text);
-            if (productKeyword) {
-                updateSearchQuery(productKeyword);
-                navigate(`/products?q=${encodeURIComponent(productKeyword)}`);
-            }
         }
 
         const requestOptions = {
@@ -100,7 +98,11 @@ const ChatBotGeminiAI = () => {
                     </div>
                     {/* Tu dong render chat:  */}
                     {chatHistory.map((chat, index) => (
-                        <ChatMessage key={index} chat={chat} />
+                        <ChatMessage 
+                            key={index} 
+                            chat={chat} 
+                            onProductClick={handleProductClick}
+                        />
                     ))}
                 </div>
 
