@@ -10,18 +10,24 @@ export class UserRepository {
     }
   }
 
-  async login(email, password) {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      return { data, error };
-    } catch (error) {
-      return { data: null, error };
+  // ... existing code ...
+async login(email, password) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    // Thêm dòng này để in access token ra console
+    if (data && data.session && data.session.access_token) {
+      console.log('Access Token:', data.session.access_token);
     }
+
+    return { data, error };
+  } catch (error) {
+    return { data: null, error };
   }
+}
 
   async register(email, password, metadata = {}) {
     try {
