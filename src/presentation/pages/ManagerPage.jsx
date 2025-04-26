@@ -13,7 +13,11 @@ const ManagerPage = () => {
     totalUsers: 0,
     totalProducts: 0,
     totalOrders: 0,
-    totalRevenue: 0
+    totalRevenueAllOrders: 0,
+    totalRevenuePendingOrders: 0,
+    totalRevenueProcessingOrders: 0,
+    totalRevenueCompletedOrders: 0,
+    totalRevenueCancelledOrders: 0
   });
   const navigate = useNavigate();
   const statsService = new StatsService();
@@ -140,8 +144,8 @@ const ManagerPage = () => {
                 <FiDollarSign className="h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
-                <p className="text-2xl font-semibold">{stats.totalRevenue.toLocaleString('vi-VN')}đ</p>
+                <p className="text-sm font-medium text-gray-600">Tổng doanh thu ước tính</p>
+                <p className="text-2xl font-semibold">{stats.totalRevenueAllOrders.toLocaleString('vi-VN')}đ</p>
               </div>
             </div>
           </div>

@@ -3,10 +3,10 @@ import IStatsRepository from '../interfaces/IStatsRepository';
 
 export default class StatsRepository extends IStatsRepository {
     async getTotalUsers() {
-        const { data: users } = await supabase
+        const { count } = await supabase
             .from('profiles')
-            .select('*');
-        return users?.length || 0;
+            .select('*', { count: 'exact', head: true });
+        return count || 0;
     }
 
     async getTotalProducts() {
@@ -17,16 +17,48 @@ export default class StatsRepository extends IStatsRepository {
     }
 
     async getTotalOrders() {
-        const { data: orders } = await supabase
+        const { count } = await supabase
             .from('orders')
-            .select('*');
-        return orders?.length || 0;
+            .select('*', { count: 'exact', head: true });
+        return count || 0;
     }
 
-    async getTotalRevenue() {
+    async getTotalRevenueAllOrders() {
         const { data: orders } = await supabase
             .from('orders')
-            .select('total_amount');
+            .select('total_amount')
+        return orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+    }
+
+    async getTotalRevenuePendingOrders() {
+        const { data: orders } = await supabase
+            .from('orders')
+            .select('total_amount')
+            .eq('status', 'Pending');
+        return orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+    }
+
+    async getTotalRevenueProcessingOrders() {
+        const { data: orders } = await supabase
+            .from('orders')
+            .select('total_amount')
+            .eq('status', 'Processing');
+        return orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+    }
+
+    async getTotalRevenueCompletedOrders() {
+        const { data: orders } = await supabase
+            .from('orders')
+            .select('total_amount')
+            .eq('status', 'Completed');
+        return orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+    }
+
+    async getTotalRevenueCancelledOrders() {
+        const { data: orders } = await supabase
+            .from('orders')
+            .select('total_amount')
+            .eq('status', 'Cancelled');
         return orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
     }
 } 

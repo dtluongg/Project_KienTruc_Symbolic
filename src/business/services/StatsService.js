@@ -7,18 +7,35 @@ export default class StatsService {
 
     async getDashboardStats() {
         try {
-            const [totalUsers, totalProducts, totalOrders, totalRevenue] = await Promise.all([
+            const [
+                totalUsers,
+                totalProducts,
+                totalOrders,
+                totalRevenueAllOrders,
+                totalRevenuePendingOrders,
+                totalRevenueProcessingOrders,
+                totalRevenueCompletedOrders,
+                totalRevenueCancelledOrders
+            ] = await Promise.all([
                 this.statsRepository.getTotalUsers(),
                 this.statsRepository.getTotalProducts(),
                 this.statsRepository.getTotalOrders(),
-                this.statsRepository.getTotalRevenue()
+                this.statsRepository.getTotalRevenueAllOrders(),
+                this.statsRepository.getTotalRevenuePendingOrders(),
+                this.statsRepository.getTotalRevenueProcessingOrders(),
+                this.statsRepository.getTotalRevenueCompletedOrders(),
+                this.statsRepository.getTotalRevenueCancelledOrders()
             ]);
 
             return {
                 totalUsers,
                 totalProducts,
                 totalOrders,
-                totalRevenue
+                totalRevenueAllOrders,
+                totalRevenuePendingOrders,
+                totalRevenueProcessingOrders,
+                totalRevenueCompletedOrders,
+                totalRevenueCancelledOrders
             };
         } catch (error) {
             console.error('Error in StatsService:', error);
