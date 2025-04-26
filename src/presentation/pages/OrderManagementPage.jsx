@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../infrastructure/config/supabase';
-import { FiAlertCircle, FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiAlertCircle, FiEdit2, FiTrash2, FiEye, FiFilter } from 'react-icons/fi';
 import '../styles/managerPage.css';
 
 const OrderManagementPage = () => {
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const navigate = useNavigate();
+
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'Pending', label: 'Chờ xử lý' },
+    { value: 'Processing', label: 'Đang xử lý' },
+    { value: 'Completed', label: 'Hoàn thành' },
+    { value: 'Cancelled', label: 'Đã hủy' }
+  ];
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -57,6 +67,7 @@ const OrderManagementPage = () => {
 
         if (error) throw error;
         setOrders(data);
+        setFilteredOrders(data);
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
@@ -64,6 +75,14 @@ const OrderManagementPage = () => {
 
     fetchOrders();
   }, [userRole]);
+
+  useEffect(() => {
+    if (selectedStatus === 'all') {
+      setFilteredOrders(orders);
+    } else {
+      setFilteredOrders(orders.filter(order => order.status === selectedStatus));
+    }
+  }, [selectedStatus, orders]);
 
   if (loading) {
     return (
@@ -112,9 +131,16 @@ const OrderManagementPage = () => {
       cancelled: 'bg-red-100 text-red-800'
     };
 
+    const statusLabels = {
+      pending: 'Chờ xử lý',
+      processing: 'Đang xử lý',
+      completed: 'Hoàn thành',
+      cancelled: 'Đã hủy'
+    };
+
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`}>
-        {status}
+        {statusLabels[status] || status}
       </span>
     );
   };
@@ -127,65 +153,81 @@ const OrderManagementPage = () => {
             <h1 className="text-3xl font-bold">Quản lý đơn hàng</h1>
             <p className="text-gray-600 mt-2">Xem và quản lý tất cả đơn hàng</p>
           </div>
+          <div className="flex items-center space-x-2" style={{color: '#000'}}>
+            <FiFilter className="text-gray-500" />
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã đơn hàng</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khách hàng</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng tiền</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {orders.map((order) => (
-                  <tr key={order.order_id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{order.order_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.user?.full_name || order.recipient_name || 'Khách hàng'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.total_amount.toLocaleString('vi-VN')}đ
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(order.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(order.order_date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => navigate(`/orders/${order.order_id}`)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <FiEye className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/orders/${order.order_id}/edit`)}
-                          className="text-yellow-600 hover:text-yellow-900"
-                        >
-                          <FiEdit2 className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => {/* Handle delete */}}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <FiTrash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
+            <div className="max-h-[600px] overflow-y-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã đơn hàng</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khách hàng</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng tiền</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredOrders.map((order) => (
+                    <tr key={order.order_id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        #{order.order_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {order.user?.full_name || order.recipient_name || 'Khách hàng'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {order.total_amount.toLocaleString('vi-VN')}đ
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(order.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {formatDate(order.order_date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => navigate(`/orders/${order.order_id}`)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <FiEye className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => navigate(`/orders/${order.order_id}/edit`)}
+                            className="text-yellow-600 hover:text-yellow-900"
+                          >
+                            <FiEdit2 className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => {/* Handle delete */}}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <FiTrash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
