@@ -16,8 +16,7 @@ const ChatBotGeminiAI = () => {
     const extractProductKeywords = (text) => {
         // Danh sách các từ khóa sản phẩm cần tìm
         const productKeywords = [
-            "Hoodie", "Signature", "Cardigan", "Shirt", "Tee", "Varsity", "Jacket",
-            "áo hoodie", "áo khoác", "áo thun", "quần", "quần jean", "áo len"
+            "Hoodie", "Signature", "Cardigan", "Shirt", "Tee", "Varsity", "Jacket"
         ];
         
         // Tìm từ khóa đầu tiên xuất hiện trong text
