@@ -3,10 +3,33 @@ import IStatsRepository from '../interfaces/IStatsRepository';
 
 export default class StatsRepository extends IStatsRepository {
     async getTotalUsers() {
-        const { count } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true });
-        return count || 0;
+        try {
+            console.log('Fetching users from Supabase...');
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*');
+            
+            console.log('Raw Supabase response:', data);
+            
+            if (error) {
+                console.error('Error fetching users:', error);
+                return 0;
+            }
+            
+            // Đếm tất cả các user, bao gồm cả manager và customer
+            const userCount = data?.length || 0;
+            console.log('Total users found:', userCount);
+            console.log('Users:', data?.map(user => ({
+                id: user.id,
+                role: user.role,
+                full_name: user.full_name
+            })));
+            
+            return userCount;
+        } catch (error) {
+            console.error('Error in getTotalUsers:', error);
+            return 0;
+        }
     }
 
     async getTotalProducts() {

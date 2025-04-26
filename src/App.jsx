@@ -87,7 +87,7 @@ const AppWrapper = () => {
       <UserProvider>
         <SearchProvider>
           <CartProvider>
-            <App />
+          <App />
           </CartProvider>
         </SearchProvider>
       </UserProvider>
