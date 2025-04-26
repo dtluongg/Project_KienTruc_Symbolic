@@ -20,6 +20,7 @@ import Auth from './presentation/pages/Auth';
 import UserProfile from './presentation/pages/UserProfile';
 import ChatBotGeminiAI from './presentation/components/ChatBotGeminiAI/ChatBotGeminiAI';
 import ManagerPage from './presentation/pages/ManagerPage';
+import OrderManagementPage from './presentation/pages/OrderManagementPage';
 
 // Import custom CSS
 import './presentation/styles/main.css';
@@ -71,6 +72,7 @@ function App() {
             } 
           />
           <Route path="/manager" element={<ManagerPage />} />
+          <Route path="/orders" element={<OrderManagementPage />} />
         </Routes>
       </main>
       <Footer />
