@@ -1,5 +1,3 @@
-import { UserModel } from '../models/UserModel';
-
 export class UserService {
   constructor(repository) {
     this.repository = repository;
@@ -9,20 +7,16 @@ export class UserService {
     try {
       const user = await this.repository.getCurrentUser();
       if (!user) return null;
-      
-      const userModel = new UserModel(user);
-      
       // Lấy thông tin profile và gán vào user
       try {
         const profile = await this.repository.getUserProfile(user.id);
         if (profile) {
-          userModel.setProfile(profile);
+          user.profile = profile;
         }
       } catch (profileError) {
         console.error('Lỗi khi lấy thông tin profile:', profileError.message);
       }
-      
-      return userModel;
+      return user;
     } catch (error) {
       throw new Error(`Lỗi khi lấy thông tin người dùng hiện tại: ${error.message}`);
     }
@@ -32,23 +26,20 @@ export class UserService {
     try {
       const result = await this.repository.login(email, password);
       if (result.error) throw result.error;
-      
-      let userModel = null;
+      let user = null;
       if (result.data && result.data.user) {
-        userModel = new UserModel(result.data.user);
-        
+        user = result.data.user;
         // Lấy thông tin profile và gán vào user
         try {
           const profile = await this.repository.getUserProfile(result.data.user.id);
           if (profile) {
-            userModel.setProfile(profile);
+            user.profile = profile;
           }
         } catch (profileError) {
           console.error('Lỗi khi lấy thông tin profile:', profileError.message);
         }
       }
-      
-      return { success: true, user: userModel };
+      return { success: true, user };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -58,11 +49,9 @@ export class UserService {
     try {
       const result = await this.repository.register(email, password, metadata);
       if (result.error) throw result.error;
-      
-      let userModel = null;
+      let user = null;
       if (result.data && result.data.user) {
-        userModel = new UserModel(result.data.user);
-        
+        user = result.data.user;
         // Tạo profile cho người dùng mới
         try {
           if (metadata) {
@@ -72,18 +61,16 @@ export class UserService {
               email: email,
               role: 'customer'
             };
-            
             const profile = await this.repository.updateUserProfile(result.data.user.id, newProfile);
             if (profile) {
-              userModel.setProfile(profile);
+              user.profile = profile;
             }
           }
         } catch (profileError) {
           console.error('Lỗi khi tạo profile:', profileError.message);
         }
       }
-      
-      return { success: true, user: userModel };
+      return { success: true, user };
     } catch (error) {
       return { success: false, error: error.message };
     }

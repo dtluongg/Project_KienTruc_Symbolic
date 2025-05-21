@@ -1,10 +1,3 @@
-import { ProductModel } from '../models/ProductModel';
-import { ProductColorModel } from '../models/ProductColorModel';
-import { ProductSizeModel } from '../models/ProductSizeModel';
-import { ProductInventoryModel } from '../models/ProductInventoryModel';
-import { ProductImageModel } from '../models/ProductImageModel';
-import { validateProduct } from '../validators/productValidator';
-
 export class ProductService {
   constructor(repository) {
     this.repository = repository;
@@ -13,7 +6,7 @@ export class ProductService {
   async getAllProducts() {
     try {
       const products = await this.repository.getAll();
-      return products.map(product => new ProductModel(product));
+      return products;
     } catch (error) {
       throw new Error(`Lỗi khi lấy danh sách sản phẩm: ${error.message}`);
     }
@@ -25,7 +18,7 @@ export class ProductService {
       if (!product) {
         throw new Error('Không tìm thấy sản phẩm');
       }
-      return new ProductModel(product);
+      return product;
     } catch (error) {
       throw new Error(`Lỗi khi lấy thông tin sản phẩm: ${error.message}`);
     }
@@ -37,7 +30,7 @@ export class ProductService {
       if (!product) {
         throw new Error('Không tìm thấy sản phẩm');
       }
-      return new ProductModel(product);
+      return product;
     } catch (error) {
       throw new Error(`Lỗi khi lấy thông tin sản phẩm: ${error.message}`);
     }
@@ -45,15 +38,9 @@ export class ProductService {
 
   async createProduct(productData) {
     try {
-      // Validate dữ liệu
-      const { isValid, errors } = validateProduct(productData);
-      if (!isValid) {
-        throw new Error(JSON.stringify(errors));
-      }
-
-      // Tạo sản phẩm mới
+      // Bỏ validate
       const newProduct = await this.repository.create(productData);
-      return new ProductModel(newProduct);
+      return newProduct;
     } catch (error) {
       throw new Error(`Lỗi khi tạo sản phẩm: ${error.message}`);
     }
@@ -61,15 +48,9 @@ export class ProductService {
 
   async updateProduct(id, productData) {
     try {
-      // Validate dữ liệu
-      const { isValid, errors } = validateProduct(productData);
-      if (!isValid) {
-        throw new Error(JSON.stringify(errors));
-      }
-
-      // Cập nhật sản phẩm
+      // Bỏ validate
       const updatedProduct = await this.repository.update(id, productData);
-      return new ProductModel(updatedProduct);
+      return updatedProduct;
     } catch (error) {
       throw new Error(`Lỗi khi cập nhật sản phẩm: ${error.message}`);
     }
@@ -93,25 +74,21 @@ export class ProductService {
       } else {
         product = await this.repository.getBySlug(idOrSlug);
       }
-
       if (!product) {
         throw new Error('Không tìm thấy sản phẩm');
       }
-
       const colors = await this.repository.getProductColors(product.product_id);
       const sizes = await this.repository.getProductSizes(product.product_id);
       const colorIds = colors.map(c => c.color_id);
       const sizeIds = sizes.map(s => s.size_id);
-      
       const inventory = await this.repository.getProductInventory(colorIds, sizeIds);
       const images = await this.repository.getProductImages(colorIds);
-
       return {
-        ...new ProductModel(product).toJSON(),
-        colors: colors.map(color => new ProductColorModel(color).toJSON()),
-        sizes: sizes.map(size => new ProductSizeModel(size).toJSON()),
-        inventory: inventory.map(inv => new ProductInventoryModel(inv).toJSON()),
-        images: images.map(img => new ProductImageModel(img).toJSON())
+        ...product,
+        colors,
+        sizes,
+        inventory,
+        images
       };
     } catch (error) {
       throw new Error(`Lỗi khi lấy chi tiết sản phẩm: ${error.message}`);

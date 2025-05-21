@@ -1,6 +1,3 @@
-import { CategoryModel } from '../models/CategoryModel';
-import { validateCategory } from '../validators/categoryValidator';
-
 export class CategoryService {
   constructor(repository) {
     this.repository = repository;
@@ -9,7 +6,7 @@ export class CategoryService {
   async getAllCategories() {
     try {
       const categories = await this.repository.getAll();
-      return categories.map(category => new CategoryModel(category));
+      return categories;
     } catch (error) {
       throw new Error(`Lỗi khi lấy danh sách danh mục: ${error.message}`);
     }
@@ -19,7 +16,7 @@ export class CategoryService {
     try {
       const categories = await this.repository.getAllCategoriesWithProductCount();
       return categories.map(category => ({
-        ...new CategoryModel(category).toJSON(),
+        ...category,
         product_count: category.product_count
       }));
     } catch (error) {
@@ -33,7 +30,19 @@ export class CategoryService {
       if (!category) {
         throw new Error('Không tìm thấy danh mục');
       }
-      return new CategoryModel(category);
+      return category;
+    } catch (error) {
+      throw new Error(`Lỗi khi lấy thông tin danh mục: ${error.message}`);
+    }
+  }
+
+  async getCategoryBySlug(slug) {
+    try {
+      const category = await this.repository.getBySlug(slug);
+      if (!category) {
+        throw new Error('Không tìm thấy danh mục');
+      }
+      return category;
     } catch (error) {
       throw new Error(`Lỗi khi lấy thông tin danh mục: ${error.message}`);
     }
@@ -41,15 +50,8 @@ export class CategoryService {
 
   async createCategory(categoryData) {
     try {
-      // Validate dữ liệu
-      const { isValid, errors } = validateCategory(categoryData);
-      if (!isValid) {
-        throw new Error(JSON.stringify(errors));
-      }
-
-      // Tạo danh mục mới
       const newCategory = await this.repository.create(categoryData);
-      return new CategoryModel(newCategory);
+      return newCategory;
     } catch (error) {
       throw new Error(`Lỗi khi tạo danh mục: ${error.message}`);
     }
@@ -57,15 +59,8 @@ export class CategoryService {
 
   async updateCategory(id, categoryData) {
     try {
-      // Validate dữ liệu
-      const { isValid, errors } = validateCategory(categoryData);
-      if (!isValid) {
-        throw new Error(JSON.stringify(errors));
-      }
-
-      // Cập nhật danh mục
       const updatedCategory = await this.repository.update(id, categoryData);
-      return new CategoryModel(updatedCategory);
+      return updatedCategory;
     } catch (error) {
       throw new Error(`Lỗi khi cập nhật danh mục: ${error.message}`);
     }
@@ -86,11 +81,9 @@ export class CategoryService {
       if (!category) {
         throw new Error('Không tìm thấy danh mục');
       }
-
       const products = await this.repository.getCategoryProducts(id);
-
       return {
-        ...new CategoryModel(category).toJSON(),
+        ...category,
         products
       };
     } catch (error) {

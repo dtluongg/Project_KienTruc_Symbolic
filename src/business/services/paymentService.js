@@ -2,26 +2,55 @@ import { PaymentRepository } from '../../data/repositories/paymentRepository';
 import { OrderService } from './orderService';
 
 export class PaymentService {
-  constructor(repository = new PaymentRepository(), orderService = null) {
+  constructor(repository) {
     this.repository = repository;
-    this.orderService = orderService;
   }
 
-  async createPayment(orderId, paymentMethodId, amount) {
+  async getAllPayments() {
     try {
-      const paymentData = {
-        order_id: orderId,
-        payment_method_id: paymentMethodId,
-        amount: amount,
-        status: 'Pending', // Trạng thái mặc định khi tạo
-        transaction_time: new Date().toISOString()
-      };
+      const payments = await this.repository.getAll();
+      return payments;
+    } catch (error) {
+      throw new Error(`Lỗi khi lấy danh sách thanh toán: ${error.message}`);
+    }
+  }
 
-      const payment = await this.repository.create(paymentData);
+  async getPaymentById(id) {
+    try {
+      const payment = await this.repository.getById(id);
+      if (!payment) {
+        throw new Error('Không tìm thấy thanh toán');
+      }
       return payment;
     } catch (error) {
-      console.error('Lỗi khi tạo payment:', error);
-      throw error;
+      throw new Error(`Lỗi khi lấy thông tin thanh toán: ${error.message}`);
+    }
+  }
+
+  async createPayment(paymentData) {
+    try {
+      const newPayment = await this.repository.create(paymentData);
+      return newPayment;
+    } catch (error) {
+      throw new Error(`Lỗi khi tạo thanh toán: ${error.message}`);
+    }
+  }
+
+  async updatePayment(id, paymentData) {
+    try {
+      const updatedPayment = await this.repository.update(id, paymentData);
+      return updatedPayment;
+    } catch (error) {
+      throw new Error(`Lỗi khi cập nhật thanh toán: ${error.message}`);
+    }
+  }
+
+  async deletePayment(id) {
+    try {
+      await this.repository.delete(id);
+      return true;
+    } catch (error) {
+      throw new Error(`Lỗi khi xóa thanh toán: ${error.message}`);
     }
   }
 

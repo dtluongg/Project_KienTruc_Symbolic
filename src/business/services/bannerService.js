@@ -1,5 +1,3 @@
-import { BannerModel } from '../models/BannerModel';
-
 export class BannerService {
   constructor(repository) {
     this.repository = repository;
@@ -8,7 +6,7 @@ export class BannerService {
   async getAllBanners() {
     try {
       const banners = await this.repository.getAll();
-      return banners.map(banner => new BannerModel(banner));
+      return banners;
     } catch (error) {
       throw new Error(`Lỗi khi lấy danh sách banner: ${error.message}`);
     }
@@ -20,7 +18,7 @@ export class BannerService {
       if (!banner) {
         throw new Error('Không tìm thấy banner');
       }
-      return new BannerModel(banner);
+      return banner;
     } catch (error) {
       throw new Error(`Lỗi khi lấy thông tin banner: ${error.message}`);
     }
@@ -29,7 +27,7 @@ export class BannerService {
   async createBanner(bannerData) {
     try {
       const newBanner = await this.repository.create(bannerData);
-      return new BannerModel(newBanner);
+      return newBanner;
     } catch (error) {
       throw new Error(`Lỗi khi tạo banner: ${error.message}`);
     }
@@ -38,7 +36,7 @@ export class BannerService {
   async updateBanner(id, bannerData) {
     try {
       const updatedBanner = await this.repository.update(id, bannerData);
-      return new BannerModel(updatedBanner);
+      return updatedBanner;
     } catch (error) {
       throw new Error(`Lỗi khi cập nhật banner: ${error.message}`);
     }

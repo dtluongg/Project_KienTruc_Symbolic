@@ -1,6 +1,58 @@
 import { supabase } from '../../infrastructure/config/supabase';
 
-export default class ProductImageService {
+export class ProductImageService {
+    constructor(repository) {
+        this.repository = repository;
+    }
+
+    async getAllImages() {
+        try {
+            const images = await this.repository.getAll();
+            return images;
+        } catch (error) {
+            throw new Error(`Lỗi khi lấy danh sách ảnh: ${error.message}`);
+        }
+    }
+
+    async getImageById(id) {
+        try {
+            const image = await this.repository.getById(id);
+            if (!image) {
+                throw new Error('Không tìm thấy ảnh');
+            }
+            return image;
+        } catch (error) {
+            throw new Error(`Lỗi khi lấy thông tin ảnh: ${error.message}`);
+        }
+    }
+
+    async createImage(imageData) {
+        try {
+            const newImage = await this.repository.create(imageData);
+            return newImage;
+        } catch (error) {
+            throw new Error(`Lỗi khi tạo ảnh: ${error.message}`);
+        }
+    }
+
+    async updateImage(id, imageData) {
+        try {
+            const updatedImage = await this.repository.update(id, imageData);
+            return updatedImage;
+        } catch (error) {
+            throw new Error(`Lỗi khi cập nhật ảnh: ${error.message}`);
+        }
+    }
+
+    async deleteImage(id) {
+        try {
+            await this.repository.delete(id);
+            return true;
+        } catch (error) {
+            throw new Error(`Lỗi khi xóa ảnh: ${error.message}`);
+        }
+    }
+
     async uploadProductImage(file) {
         try {
             if (!file) {
@@ -66,4 +118,6 @@ export default class ProductImageService {
             };
         }
     }
-} 
+}
+
+export default ProductImageService; 

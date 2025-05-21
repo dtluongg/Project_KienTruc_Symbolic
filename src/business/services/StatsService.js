@@ -1,8 +1,8 @@
 import StatsRepository from '../../data/repositories/StatsRepository';
 
-export default class StatsService {
-    constructor() {
-        this.statsRepository = new StatsRepository();
+export class StatsService {
+    constructor(repository = new StatsRepository()) {
+        this.repository = repository;
     }
 
     async getDashboardStats() {
@@ -17,16 +17,15 @@ export default class StatsService {
                 totalRevenueCompletedOrders,
                 totalRevenueCancelledOrders
             ] = await Promise.all([
-                this.statsRepository.getTotalUsers(),
-                this.statsRepository.getTotalProducts(),
-                this.statsRepository.getTotalOrders(),
-                this.statsRepository.getTotalRevenueAllOrders(),
-                this.statsRepository.getTotalRevenuePendingOrders(),
-                this.statsRepository.getTotalRevenueProcessingOrders(),
-                this.statsRepository.getTotalRevenueCompletedOrders(),
-                this.statsRepository.getTotalRevenueCancelledOrders()
+                this.repository.getTotalUsers(),
+                this.repository.getTotalProducts(),
+                this.repository.getTotalOrders(),
+                this.repository.getTotalRevenueAllOrders(),
+                this.repository.getTotalRevenuePendingOrders(),
+                this.repository.getTotalRevenueProcessingOrders(),
+                this.repository.getTotalRevenueCompletedOrders(),
+                this.repository.getTotalRevenueCancelledOrders()
             ]);
-
             return {
                 totalUsers,
                 totalProducts,
@@ -38,8 +37,18 @@ export default class StatsService {
                 totalRevenueCancelledOrders
             };
         } catch (error) {
-            console.error('Error in StatsService:', error);
-            throw error;
+            throw new Error(`Lỗi khi lấy thống kê dashboard: ${error.message}`);
         }
     }
-} 
+
+    async getStats() {
+        try {
+            const stats = await this.repository.getStats();
+            return stats;
+        } catch (error) {
+            throw new Error(`Lỗi khi lấy thống kê: ${error.message}`);
+        }
+    }
+}
+
+export default StatsService; 

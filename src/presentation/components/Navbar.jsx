@@ -115,7 +115,7 @@ const Navbar = () => {
               <div className="relative group">
                 <button className="text-[#0a0a0a] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50 flex items-center gap-2">
                   <div className="w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xs">
-                    {user.getFullName()?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    {user.profile?.full_name || user.full_name || user.email || 'U'}
                   </div>
                 </button>
                 <div className="absolute right-0 w-48 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden z-20 opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-300 transform scale-95 group-hover:scale-100 pt-3 mt-1 border border-[#93909f]/30">
@@ -193,7 +193,7 @@ const Navbar = () => {
                 {user ? (
                   <Link to="/profile" className="text-[#0a0a0a] hover:text-black p-2 rounded-full hover:bg-[#93909f]/50">
                     <div className="w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xs">
-                      {user.getFullName()?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      {user.profile?.full_name || user.full_name || user.email || 'U'}
                     </div>
                   </Link>
                 ) : (

@@ -31,7 +31,7 @@ const UserProfile = () => {
   useEffect(() => {
     if (profile) {
       setFormData({
-        full_name: user.getFullName() || '',
+        full_name: user.profile?.full_name || user.full_name || user.email || 'U',
         phone_number: profile.phone_number || '',
         address: profile.address || '',
       });
@@ -185,7 +185,7 @@ const UserProfile = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-indigo-500 text-white text-4xl">
-                      {user.getFullName()?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      {user.profile?.full_name || user.full_name || user.email || 'U'}
                     </div>
                   )}
                 </div>
@@ -205,7 +205,7 @@ const UserProfile = () => {
                   </div>
                   <div className="border rounded-lg p-4 bg-gray-50">
                     <h3 className="text-sm font-medium text-gray-500 mb-1">Họ và tên</h3>
-                    <p className="text-gray-900">{user.getFullName() || 'Chưa cập nhật'}</p>
+                    <p className="text-gray-900">{user.profile?.full_name || user.full_name || user.email || 'U'}</p>
                   </div>
                   
                   {profile && (

@@ -4,11 +4,32 @@ import { ShippingMethodService } from './shippingMethodService';
 import { PaymentService } from './paymentService';
 
 export class OrderService {
-  constructor(orderRepository = new OrderRepository()) {
-    this.orderRepository = orderRepository;
+  constructor(repository) {
+    this.repository = repository;
     this.couponService = new CouponService();
     this.shippingMethodService = new ShippingMethodService();
     this.paymentService = new PaymentService(undefined, this);
+  }
+
+  async getAllOrders() {
+    try {
+      const orders = await this.repository.getAll();
+      return orders;
+    } catch (error) {
+      throw new Error(`Lỗi khi lấy danh sách đơn hàng: ${error.message}`);
+    }
+  }
+
+  async getOrderById(id) {
+    try {
+      const order = await this.repository.getById(id);
+      if (!order) {
+        throw new Error('Không tìm thấy đơn hàng');
+      }
+      return order;
+    } catch (error) {
+      throw new Error(`Lỗi khi lấy thông tin đơn hàng: ${error.message}`);
+    }
   }
 
   async createOrder(orderData, cartItems) {
@@ -53,7 +74,7 @@ export class OrderService {
       orderData.status = 'Pending';
       
       // 7. Tạo đơn hàng
-      const order = await this.orderRepository.createOrder(orderData);
+      const order = await this.repository.create(orderData);
       
       if (!order || !order.order_id) {
         throw new Error('Không thể tạo đơn hàng, thiếu order_id');
@@ -67,7 +88,7 @@ export class OrderService {
         price_at_order: item.price * item.quantity
       }));
       
-      await this.orderRepository.createOrderItems(orderItems);
+      await this.repository.createOrderItems(orderItems);
       
       // 9. Cập nhật số lần sử dụng mã giảm giá
       if (orderData.coupon_id) {
@@ -82,7 +103,7 @@ export class OrderService {
       );
 
       // 11. Lấy thông tin chi tiết đơn hàng
-      const orderDetails = await this.orderRepository.getOrderDetails(order.order_id);
+      const orderDetails = await this.repository.getOrderDetails(order.order_id);
       
       return {
         success: true,
@@ -118,11 +139,11 @@ export class OrderService {
   }
 
   async getOrdersByUser(userId) {
-    return await this.orderRepository.getOrdersByUser(userId);
+    return await this.repository.getOrdersByUser(userId);
   }
 
   async getOrderDetails(orderId) {
-    return await this.orderRepository.getOrderDetails(orderId);
+    return await this.repository.getOrderDetails(orderId);
   }
 
   async updateOrderStatus(orderId, status) {
@@ -132,11 +153,29 @@ export class OrderService {
         throw new Error('Trạng thái đơn hàng không hợp lệ');
       }
 
-      const order = await this.orderRepository.updateOrderStatus(orderId, status);
+      const order = await this.repository.updateOrderStatus(orderId, status);
       return order;
     } catch (error) {
       console.error('Lỗi khi cập nhật trạng thái đơn hàng:', error);
       throw error;
+    }
+  }
+
+  async updateOrder(id, orderData) {
+    try {
+      const updatedOrder = await this.repository.update(id, orderData);
+      return updatedOrder;
+    } catch (error) {
+      throw new Error(`Lỗi khi cập nhật đơn hàng: ${error.message}`);
+    }
+  }
+
+  async deleteOrder(id) {
+    try {
+      await this.repository.delete(id);
+      return true;
+    } catch (error) {
+      throw new Error(`Lỗi khi xóa đơn hàng: ${error.message}`);
     }
   }
 } 
