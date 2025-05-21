@@ -157,7 +157,7 @@ const ManagerPage = () => {
             <h2 className="text-xl font-semibold mb-4">Quản lý sản phẩm</h2>
             <p className="text-gray-600 mb-4">Thêm, sửa, xóa sản phẩm và quản lý danh mục</p>
             <button
-              onClick={() => navigate('/products')}
+              onClick={() => navigate('/product-management')}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
             >
               Quản lý sản phẩm
