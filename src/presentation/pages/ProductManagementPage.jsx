@@ -236,12 +236,6 @@ const ProductManagementPage = () => {
       }
     }
   };
-  const handleDeleteProduct = async (product_id) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
-    await supabase.from('products').delete().eq('product_id', product_id);
-    setReload(r => !r);
-    setSelectedProductId(null);
-  };
 
   // Modal biến thể
   const openVariantModal = (type, variant = null) => {
@@ -503,7 +497,6 @@ const ProductManagementPage = () => {
                     </td>
                     <td className="px-4 py-2 flex gap-2">
                       <button onClick={e => { e.stopPropagation(); openProductModal('edit', p); }} className="text-yellow-600 hover:text-yellow-800"><FiEdit2 /></button>
-                      <button onClick={e => { e.stopPropagation(); handleDeleteProduct(p.product_id); }} className="text-red-600 hover:text-red-800"><FiTrash2 /></button>
                     </td>
                   </tr>
                 ))}
@@ -567,7 +560,6 @@ const ProductManagementPage = () => {
                       </td>
                       <td className="px-4 py-2 flex gap-2">
                         <button onClick={() => openVariantModal('edit', v)} className="text-yellow-600 hover:text-yellow-800"><FiEdit2 /></button>
-                        {/* Có thể thêm nút xóa biến thể ở đây */}
                       </td>
                     </tr>
                   ))}
