@@ -154,10 +154,10 @@ const ManagerPage = () => {
         {/* Các chức năng quản lý */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="nav-quanly bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Quản lý sản phẩm</h2>
+            <h2 className="text-xl font-semibold mb-4 text-indigo-700">Quản lý sản phẩm</h2>
             <p className="text-gray-600 mb-4">Thêm, sửa, xóa sản phẩm và quản lý danh mục</p>
             <button
-              onClick={() => navigate('/products')}
+              onClick={() => navigate('/product-management')}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
             >
               Quản lý sản phẩm
@@ -165,7 +165,7 @@ const ManagerPage = () => {
           </div>
 
           <div className="nav-quanly bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Quản lý đơn hàng</h2>
+            <h2 className="text-xl font-semibold mb-4 text-indigo-700">Quản lý đơn hàng</h2>
             <p className="text-gray-600 mb-4">Xem và xử lý các đơn hàng của khách hàng</p>
             <button
               onClick={() => navigate('/orders')}
