@@ -1,4 +1,4 @@
-import { redisRepository } from '../../data/repositories/redisRepository';
+import { redisRepository } from './redisRepository.js';
 
 class CacheService {
   constructor() {

@@ -1,0 +1,9 @@
+vào project, run: node src/redis_demo/redis_server.js
+
+http://localhost:3001/redis/products 
+
+router.get('/products/:id', getProduct);  
+router.post('/products', createProduct);
+router.put('/products/:id', updateProduct);
+router.delete('/products/:id', deleteProduct);
+router.get('/products', getAllProducts);

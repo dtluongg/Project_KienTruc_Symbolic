@@ -1,8 +1,8 @@
-import { supabase } from '../../infrastructure/config/supabase.js';
+import { redis_supabase } from './config/redis_supabase.js';
 
 export class ProductRepository {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('products')
       .select('*')
       .eq('is_active', true);
@@ -12,7 +12,7 @@ export class ProductRepository {
   }
 
   async getById(id) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('products')
       .select('*')
       .eq('product_id', id)
@@ -24,7 +24,7 @@ export class ProductRepository {
   }
 
   async getBySlug(slug) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('products')
       .select('*')
       .eq('slug', slug)
@@ -36,7 +36,7 @@ export class ProductRepository {
   }
 
   async create(productData) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('products')
       .insert([productData])
       .select()
@@ -47,7 +47,7 @@ export class ProductRepository {
   }
 
   async update(id, productData) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('products')
       .update(productData)
       .eq('product_id', id)
@@ -59,7 +59,7 @@ export class ProductRepository {
   }
 
   async delete(id) {
-    const { error } = await supabase
+    const { error } = await redis_supabase
       .from('products')
       .update({ is_active: false })
       .eq('product_id', id);
@@ -69,7 +69,7 @@ export class ProductRepository {
   }
 
   async getProductColors(productId) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('product_colors')
       .select('*')
       .eq('product_id', productId);
@@ -79,7 +79,7 @@ export class ProductRepository {
   }
 
   async getProductSizes(productId) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('product_sizes')
       .select('*')
       .eq('product_id', productId);
@@ -89,7 +89,7 @@ export class ProductRepository {
   }
 
   async getProductInventory(colorIds, sizeIds) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('product_inventory')
       .select('*')
       .in('color_id', colorIds)
@@ -100,7 +100,7 @@ export class ProductRepository {
   }
 
   async getProductImages(colorIds) {
-    const { data, error } = await supabase
+    const { data, error } = await redis_supabase
       .from('product_images')
       .select('*')
       .in('color_id', colorIds);
