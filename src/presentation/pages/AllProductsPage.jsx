@@ -6,6 +6,25 @@ import { FiShoppingCart, FiEdit2, FiTrash2, FiPlus, FiX, FiCheck, FiUpload } fro
 import ProductImageService from '../../business/services/ProductImageService';
 import '../styles/productForm.css';
 
+async function fetchWithRetry(queryFunc, retries = 3, delay = 3000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      if (i > 0) {
+        console.log(`Retry lần thứ ${i + 1} sau ${delay / 1000} giây...`);
+      }
+      return await queryFunc();
+    } catch (err) {
+      if (i < retries - 1) {
+        console.log(`Lỗi khi gọi API: ${err.message || err}. Sẽ thử lại...`);
+        await new Promise(res => setTimeout(res, delay));
+      } else {
+        console.log('Đã hết số lần retry. Lỗi cuối cùng:', err);
+        throw err;
+      }
+    }
+  }
+}
+
 const AllProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +54,7 @@ const AllProductsPage = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const fileInputRef = useRef(null);
   const [productImages, setProductImages] = useState([]);
+  const isFirstLoad = useRef(true);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -52,11 +72,38 @@ const AllProductsPage = () => {
     checkUserRole();
   }, []);
 
+  // Rate limiter: chỉ cộng khi reload hoặc đóng tab
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      const now = Date.now();
+      let callTimes = JSON.parse(localStorage.getItem('callTimes') || '[]');
+      callTimes = callTimes.filter(time => now - time < 60000);
+      callTimes.push(now);
+      localStorage.setItem('callTimes', JSON.stringify(callTimes));
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  // Kiểm tra số lần reload khi trang mount
+  useEffect(() => {
+    const now = Date.now();
+    let callTimes = JSON.parse(localStorage.getItem('callTimes') || '[]');
+    callTimes = callTimes.filter(time => now - time < 60000);
+    if (callTimes.length >= 5) {
+      alert('Bạn đã reload trang quá 5 lần trong 1 phút!');
+      console.log('Rate limiter: Quá 5 lần reload trang trong 1 phút!');
+    } else {
+      console.log(`Rate limiter: Đã reload trang ${callTimes.length}/5 lần trong 1 phút.`);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-
         // Xây dựng query cơ bản
         let query = supabase
           .from('products')
@@ -75,7 +122,16 @@ const AllProductsPage = () => {
           query = query.ilike('product_name', `%${searchQuery}%`);
         }
 
-        const { data: productsData, error: productsError } = await query;
+        // Thực hiện retry khi gọi API
+        const { data: productsData, error: productsError } = await fetchWithRetry(
+          async () => {
+            const { data, error } = await query;
+            if (error) throw error;
+            return { data, error };
+          },
+          3,
+          3000
+        );
 
         if (productsError) throw productsError;
 
