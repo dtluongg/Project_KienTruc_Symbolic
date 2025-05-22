@@ -18,19 +18,6 @@ const OrderManagementPage = () => {
   const [modalProducts, setModalProducts] = useState([]);
   const navigate = useNavigate();
 
-  // CRUD modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [orderForm, setOrderForm] = useState({
-    recipient_name: '',
-    recipient_phone: '',
-    recipient_email: '',
-    shipping_address: '',
-    status: 'Pending',
-    total_amount: 0,
-  });
-  const [editingOrderId, setEditingOrderId] = useState(null);
-
   // View modal state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewOrder, setViewOrder] = useState(null);
@@ -236,9 +223,6 @@ const OrderManagementPage = () => {
             <p className="text-gray-600 mt-2">Xem và quản lý tất cả đơn hàng</p>
           </div>
           <div className="flex items-center space-x-2" style={{color: '#000'}}>
-            <button onClick={openCreateModal} className="flex items-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-              <FiPlus className="mr-2" /> Tạo đơn hàng mới
-            </button>
             <FiFilter className="text-gray-500" />
             <select
               value={selectedStatus}
@@ -312,32 +296,6 @@ const OrderManagementPage = () => {
               <div className="flex justify-end mt-6">
                 <button onClick={() => setIsViewModalOpen(false)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Đóng</button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal tạo/sửa đơn hàng */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg text-black">
-              <h2 className="text-xl font-bold mb-4">{isEditMode ? 'Cập nhật đơn hàng' : 'Tạo đơn hàng mới'}</h2>
-              <form onSubmit={handleOrderFormSubmit} className="space-y-4">
-                <input name="recipient_name" value={orderForm.recipient_name} onChange={handleOrderFormChange} placeholder="Tên người nhận" className="w-full border px-3 py-2 rounded" required />
-                <input name="recipient_phone" value={orderForm.recipient_phone} onChange={handleOrderFormChange} placeholder="Số điện thoại" className="w-full border px-3 py-2 rounded" required />
-                <input name="recipient_email" value={orderForm.recipient_email} onChange={handleOrderFormChange} placeholder="Email" className="w-full border px-3 py-2 rounded" />
-                <input name="shipping_address" value={orderForm.shipping_address} onChange={handleOrderFormChange} placeholder="Địa chỉ giao hàng" className="w-full border px-3 py-2 rounded" required />
-                <input name="total_amount" type="number" value={orderForm.total_amount} onChange={handleOrderFormChange} placeholder="Tổng tiền" className="w-full border px-3 py-2 rounded" required />
-                <select name="status" value={orderForm.status} onChange={handleOrderFormChange} className="w-full border px-3 py-2 rounded">
-                  <option value="Pending">Chờ xử lý</option>
-                  <option value="Processing">Đang xử lý</option>
-                  <option value="Completed">Hoàn thành</option>
-                  <option value="Cancelled">Đã hủy</option>
-                </select>
-                <div className="flex justify-end gap-2">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-300 rounded">Hủy</button>
-                  <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded">{isEditMode ? 'Cập nhật' : 'Tạo mới'}</button>
-                </div>
-              </form>
             </div>
           </div>
         )}
