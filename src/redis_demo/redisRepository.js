@@ -1,4 +1,4 @@
-import { redisClient } from '../../infrastructure/redis/redisConfig';
+import { redisClient } from './redis/redisConfig.js';
 
 class RedisRepository {
   constructor() {
