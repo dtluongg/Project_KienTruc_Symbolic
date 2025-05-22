@@ -10,6 +10,12 @@ const OrderManagementPage = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOrder, setModalOrder] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [modalStatus, setModalStatus] = useState('');
+  const [modalProducts, setModalProducts] = useState([]);
   const navigate = useNavigate();
 
   // CRUD modal state
@@ -89,79 +95,83 @@ const OrderManagementPage = () => {
     }
   }, [selectedStatus, orders]);
 
-  // CRUD handlers
-  const openCreateModal = () => {
-    setOrderForm({
-      recipient_name: '',
-      recipient_phone: '',
-      recipient_email: '',
-      shipping_address: '',
-      status: 'Pending',
-      total_amount: 0,
-    });
-    setIsEditMode(false);
-    setEditingOrderId(null);
-    setIsModalOpen(true);
-  };
-  const openEditModal = (order) => {
-    setOrderForm({
-      recipient_name: order.recipient_name || '',
-      recipient_phone: order.recipient_phone || '',
-      recipient_email: order.recipient_email || '',
-      shipping_address: order.shipping_address || '',
-      status: order.status || 'Pending',
-      total_amount: order.total_amount || 0,
-    });
-    setIsEditMode(true);
-    setEditingOrderId(order.order_id);
-    setIsModalOpen(true);
-  };
-  const handleOrderFormChange = (e) => {
-    const { name, value } = e.target;
-    setOrderForm(prev => ({ ...prev, [name]: value }));
-  };
-  const handleOrderFormSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isEditMode) {
-        const { error } = await supabase
-          .from('orders')
-          .update(orderForm)
-          .eq('order_id', editingOrderId);
-        if (error) throw error;
-        alert('Cập nhật đơn hàng thành công!');
-      } else {
-        const { error } = await supabase
-          .from('orders')
-          .insert([orderForm]);
-        if (error) throw error;
-        alert('Tạo đơn hàng thành công!');
-      }
-      setIsModalOpen(false);
-      await fetchOrders();
-    } catch (error) {
-      alert('Lỗi: ' + error.message);
-    }
-  };
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) return;
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .eq('order_id', orderId);
-      if (error) throw error;
-      alert('Xóa đơn hàng thành công!');
-      await fetchOrders();
-    } catch (error) {
-      alert('Lỗi khi xóa đơn hàng: ' + error.message);
+  const openOrderModal = async (order, isEdit = false) => {
+    setModalOrder(order);
+    setEditMode(isEdit);
+    setModalStatus(order.status);
+    setModalOpen(true);
+    // Lấy tên sản phẩm cho từng order_item
+    if (order.order_items && order.order_items.length > 0) {
+      const products = await Promise.all(order.order_items.map(async (item, idx) => {
+        // Lấy inventory
+        const { data: inventory } = await supabase
+          .from('product_inventory')
+          .select('color_id, size_id')
+          .eq('inventory_id', item.inventory_id)
+          .single();
+        if (!inventory) return { ...item, product_name: 'Không xác định', stt: idx + 1 };
+        // Lấy color
+        const { data: color } = await supabase
+          .from('product_colors')
+          .select('product_id, color_name, color_id')
+          .eq('color_id', inventory.color_id)
+          .single();
+        // Lấy size
+        const { data: size } = await supabase
+          .from('product_sizes')
+          .select('size_name')
+          .eq('size_id', inventory.size_id)
+          .single();
+        // Lấy product
+        const { data: product } = await supabase
+          .from('products')
+          .select('product_name')
+          .eq('product_id', color?.product_id)
+          .single();
+        // Lấy hình ảnh
+        const { data: image } = await supabase
+          .from('product_images')
+          .select('image_url')
+          .eq('color_id', color?.color_id)
+          .eq('is_primary', true)
+          .single();
+        return {
+          ...item,
+          stt: idx + 1,
+          product_name: product?.product_name || 'Không xác định',
+          color_name: color?.color_name || '',
+          size_name: size?.size_name || '',
+          image_url: image?.image_url || '',
+        };
+      }));
+      setModalProducts(products);
+    } else {
+      setModalProducts([]);
     }
   };
 
-  // View modal handlers
-  const openViewModal = (order) => {
-    setViewOrder(order);
-    setIsViewModalOpen(true);
+  const closeOrderModal = () => {
+    setModalOpen(false);
+    setModalOrder(null);
+    setEditMode(false);
+    setModalProducts([]);
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!modalOrder) return;
+    setUpdating(true);
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: modalStatus })
+      .eq('order_id', modalOrder.order_id);
+    setUpdating(false);
+    if (!error) {
+      setOrders((prev) => prev.map(o => o.order_id === modalOrder.order_id ? { ...o, status: modalStatus } : o));
+      setFilteredOrders((prev) => prev.map(o => o.order_id === modalOrder.order_id ? { ...o, status: modalStatus } : o));
+      closeOrderModal();
+    } else {
+      alert('Có lỗi khi cập nhật trạng thái!');
+    }
   };
 
   if (loading) {
@@ -204,23 +214,16 @@ const OrderManagementPage = () => {
   };
 
   const getStatusBadge = (status) => {
-    const statusClasses = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      processing: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800'
+    // Map trạng thái sang tiếng Việt và style
+    const statusMap = {
+      Pending: { label: 'Chờ xử lý', style: 'bg-yellow-50 border border-yellow-400 text-yellow-800' },
+      Processing: { label: 'Đang xử lý', style: 'bg-blue-50 border border-blue-400 text-blue-800' },
+      Completed: { label: 'Hoàn thành', style: 'bg-green-50 border border-green-400 text-green-800' },
+      Cancelled: { label: 'Đã hủy', style: 'bg-red-50 border border-red-400 text-red-800' },
     };
-    const statusLabels = {
-      pending: 'Chờ xử lý',
-      processing: 'Đang xử lý',
-      completed: 'Hoàn thành',
-      cancelled: 'Đã hủy'
-    };
-    const key = status?.toLowerCase();
+    const info = statusMap[status] || { label: status, style: 'bg-gray-100 border border-gray-400 text-gray-800' };
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[key] || 'bg-gray-100 text-gray-800'}`}>
-        {statusLabels[key] || status}
-      </span>
+      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${info.style}`}>{info.label}</span>
     );
   };
 
@@ -240,7 +243,7 @@ const OrderManagementPage = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="block w-60 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-base"
             >
               {statusOptions.map(option => (
                 <option key={option.value} value={option.value}>
@@ -374,22 +377,16 @@ const OrderManagementPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => openViewModal(order)}
+                            onClick={() => openOrderModal(order, false)}
                             className="text-blue-600 hover:text-blue-900"
                           >
                             <FiEye className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => openEditModal(order)}
+                            onClick={() => openOrderModal(order, true)}
                             className="text-yellow-600 hover:text-yellow-900"
                           >
                             <FiEdit2 className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteOrder(order.order_id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <FiTrash2 className="h-5 w-5" />
                           </button>
                         </div>
                       </td>
@@ -400,6 +397,77 @@ const OrderManagementPage = () => {
             </div>
           </div>
         </div>
+        {/* Modal chi tiết/chỉnh sửa đơn hàng */}
+        {modalOpen && modalOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative text-gray-900">
+              <button onClick={closeOrderModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">×</button>
+              <h2 className="text-2xl font-bold mb-4">{editMode ? 'Chỉnh sửa đơn hàng' : 'Chi tiết đơn hàng'}</h2>
+              <div className="mb-2"><b>Mã đơn hàng:</b> #{modalOrder.order_id}</div>
+              <div className="mb-2"><b>Khách hàng:</b> {modalOrder.user?.full_name || modalOrder.recipient_name || 'Khách hàng'}</div>
+              <div className="mb-2"><b>Email:</b> {modalOrder.user?.email || modalOrder.recipient_email || '-'}</div>
+              <div className="mb-2"><b>Số điện thoại:</b> {modalOrder.user?.phone_number || modalOrder.recipient_phone || '-'}</div>
+              <div className="mb-2"><b>Địa chỉ:</b> {modalOrder.shipping_address || modalOrder.user?.address || '-'}</div>
+              <div className="mb-2"><b>Ngày đặt:</b> {formatDate(modalOrder.order_date)}</div>
+              <div className="mb-2"><b>Tổng tiền:</b> {modalOrder.total_amount.toLocaleString('vi-VN')}đ</div>
+              <div className="mb-2"><b>Ghi chú:</b> {modalOrder.notes || '-'}</div>
+              <div className="mb-2"><b>Trạng thái:</b> {!editMode ? getStatusBadge(modalOrder.status) : (
+                <select value={modalStatus} onChange={e => setModalStatus(e.target.value)} className="border rounded px-2 py-1">
+                  {statusOptions.filter(opt => opt.value !== 'all').map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              )}
+              </div>
+              <div className="mb-2">
+                <b>Danh sách sản phẩm:</b>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-200 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-2 py-1 border">STT</th>
+                        <th className="px-2 py-1 border">Hình</th>
+                        <th className="px-2 py-1 border">Tên sản phẩm</th>
+                        <th className="px-2 py-1 border">Size</th>
+                        <th className="px-2 py-1 border">Màu</th>
+                        <th className="px-2 py-1 border">Số lượng</th>
+                        <th className="px-2 py-1 border">Giá</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {modalProducts.map(item => (
+                        <tr key={item.item_id}>
+                          <td className="px-2 py-1 border text-center">{item.stt}</td>
+                          <td className="px-2 py-1 border text-center">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt={item.product_name} className="w-12 h-12 object-cover rounded mx-auto" />
+                            ) : (
+                              <span className="text-gray-400">Không có ảnh</span>
+                            )}
+                          </td>
+                          <td className="px-2 py-1 border">{item.product_name}</td>
+                          <td className="px-2 py-1 border text-center">{item.size_name}</td>
+                          <td className="px-2 py-1 border text-center">{item.color_name}</td>
+                          <td className="px-2 py-1 border text-center">{item.quantity}</td>
+                          <td className="px-2 py-1 border text-right">{item.price_at_order.toLocaleString('vi-VN')}đ</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {editMode && (
+                <button
+                  onClick={handleUpdateStatus}
+                  disabled={updating}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {updating ? 'Đang cập nhật...' : 'Cập nhật trạng thái'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

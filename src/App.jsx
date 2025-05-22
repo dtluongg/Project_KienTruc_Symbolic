@@ -22,6 +22,10 @@ import ChatBotGeminiAI from './presentation/components/ChatBotGeminiAI/ChatBotGe
 import ManagerPage from './presentation/pages/ManagerPage';
 import OrderManagementPage from './presentation/pages/OrderManagementPage';
 import ProductManagementPage from './presentation/pages/ProductManagementPage';
+<<<<<<< HEAD
+=======
+
+>>>>>>> Huy_work
 // Import custom CSS
 import './presentation/styles/main.css';
 
