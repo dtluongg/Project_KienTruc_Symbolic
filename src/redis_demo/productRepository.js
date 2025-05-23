@@ -1,5 +1,4 @@
 import { redis_supabase } from './config/redis_supabase.js';
-import { connectMongoDB } from '../../mongodb_demo/mongodb.js';
 
 export class ProductRepository {
   async getAll() {
@@ -9,20 +8,6 @@ export class ProductRepository {
       .eq('is_active', true);
 
     if (error) throw error;
-
-    // Lưu vào MongoDB nếu lấy được data
-    if (data && data.length > 0) {
-      const db = await connectMongoDB();
-      const productsCollection = db.collection('products');
-      for (const product of data) {
-        await productsCollection.updateOne(
-          { product_id: product.product_id },
-          { $set: product },
-          { upsert: true }
-        );
-      }
-    }
-
     return data;
   }
 
