@@ -1,5 +1,6 @@
 import { cacheService } from '../cacheService.js';
 import { ProductRepository } from '../productRepository.js';
+import Product from '../models/Product.js';
 
 const productRepository = new ProductRepository();
 
@@ -51,6 +52,14 @@ export const getAllProducts = async (req, res) => {
   products = await productRepository.getAll();
   if (products) {
     await cacheService.cacheProductList(products);
+    // Lưu vào MongoDB
+    try {
+      await Product.deleteMany({});
+      await Product.insertMany(products);
+      console.log('Đã lưu products vào MongoDB!');
+    } catch (err) {
+      console.error('Lỗi khi lưu vào MongoDB:', err);
+    }
     return res.json(products);
   }
   res.status(404).json({ message: 'No products found' });
